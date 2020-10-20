@@ -1,5 +1,7 @@
 package com.sollyu.android.bluetooth.helper.fragment
 
+import android.app.Activity
+import android.bluetooth.BluetoothDevice
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -16,11 +18,11 @@ import kotlinx.android.synthetic.main.fragment_main.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class MainFragment : BaseFragment(), ServiceConnection, Observer<ByteArray> {
+class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothService.Action> {
 
     private val requestCodeDevice: Int = 932
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
-    private var bluetoothServiceBinder:BluetoothService.Binder ?= null
+    private var bluetoothServiceBinder: BluetoothService.Binder? = null
 
     override fun onCreateView(): View =
         LayoutInflater.from(requireContext()).inflate(R.layout.fragment_main, baseFragmentActivity.fragmentContainerView, false) as View
@@ -46,9 +48,19 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<ByteArray> {
         requireActivity().unbindService(this)
     }
 
+    override fun onFragmentResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onFragmentResult(requestCode, resultCode, data)
+        if (requestCode == requestCodeDevice && resultCode == Activity.RESULT_OK) {
+            val bluetoothDevice: BluetoothDevice = data?.getParcelableExtra("s") ?: return
+            bluetoothServiceBinder?.getService()?.connectAsClient(bluetoothDevice)
+            logger.info("LOG:MainFragment:onFragmentResult:bluetoothDevice={} ", bluetoothDevice.address)
+        }
+    }
+
     private fun onClickBtnSend(view: View) {
-        val bluetoothServiceBinder: BluetoothService.Binder = this.bluetoothServiceBinder ?: return
-        bluetoothServiceBinder.getService().connect("as")
+        val data: ByteArray = edtMessage.text?.toString()?.toByteArray() ?: return
+        bluetoothServiceBinder?.getService()?.write(data)
+        //bluetoothServiceBinder?.getService()?.disconnect()
     }
 
     private fun onClickMenuMore(view: View) {
@@ -80,7 +92,7 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<ByteArray> {
         logger.info("LOG:MainFragment:onServiceConnected name={} service={}", name, service)
         if (service is BluetoothService.Binder) {
             this.bluetoothServiceBinder = service
-            service.getService().getReader().observe(this, this)
+            service.getService().getLiveDate().observe(this, this)
         }
     }
 
@@ -88,7 +100,24 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<ByteArray> {
         logger.info("LOG:MainFragment:onServiceDisconnected name={}", name)
     }
 
-    override fun onChanged(t: ByteArray?) {
+    override fun onChanged(t: BluetoothService.Action) {
         logger.info("LOG:MainFragment:onChanged t={}", t)
+        when (t.action) {
+            BluetoothService.ActionType.CONNECTING -> {
+                tvStatus.text = "连接中"
+            }
+            BluetoothService.ActionType.CONNECTED -> {
+                tvStatus.text = "已连接"
+            }
+            BluetoothService.ActionType.DISCONNECT -> {
+                tvStatus.text = "未连接"
+            }
+            BluetoothService.ActionType.READ -> {
+
+            }
+            BluetoothService.ActionType.WRITE -> {
+
+            }
+        }
     }
 }
