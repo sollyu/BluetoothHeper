@@ -8,7 +8,7 @@ import kotlinx.android.synthetic.main.fragment_settings.*
 
 class SettingsFragment : BaseFragment() {
     override fun onCreateView(): View =
-        LayoutInflater.from(requireContext()).inflate(R.layout.fragment_about, baseFragmentActivity.fragmentContainerView, false) as View
+        LayoutInflater.from(requireContext()).inflate(R.layout.fragment_settings, baseFragmentActivity.fragmentContainerView, false) as View
 
     override fun onViewCreated(rootView: View) {
         super.onViewCreated(rootView)

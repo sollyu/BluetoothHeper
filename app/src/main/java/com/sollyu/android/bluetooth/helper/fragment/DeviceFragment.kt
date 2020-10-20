@@ -10,18 +10,27 @@ import android.content.IntentFilter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.qmuiteam.qmui.widget.grouplist.QMUICommonListItemView
+import com.qmuiteam.qmui.widget.grouplist.QMUIGroupListView
 import com.sollyu.android.bluetooth.helper.R
 import kotlinx.android.synthetic.main.fragment_device.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.w3c.dom.Text
+import androidx.core.view.updateLayoutParams as updateLayoutParams1
 
 class DeviceFragment : BaseFragment() {
 
     private val searchDevicesBroadcastReceiver: SearchDevicesBroadcastReceiver = SearchDevicesBroadcastReceiver()
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
     private val recyclerViewAdapter: RecyclerViewAdapter = RecyclerViewAdapter()
-
+    private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
 
     override fun onCreateView(): View =
         LayoutInflater.from(requireContext()).inflate(R.layout.fragment_device, baseFragmentActivity.fragmentContainerView, false) as View
@@ -30,9 +39,13 @@ class DeviceFragment : BaseFragment() {
         super.onViewCreated(rootView)
         qmuiTopBarLayout.setTitle(R.string.fragment_device_title)
         qmuiTopBarLayout.addLeftBackImageButton().setOnClickListener { this.popBackStackResult(resultCode = Activity.RESULT_CANCELED, data = null) }
+        qmuiTopBarLayout.addRightImageButton(R.drawable.ic_expand, R.id.menu_more).setOnClickListener(this::onClickRefresh)
 
         val context: Context = rootView.context
-        val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
+
+        recyclerView.layoutManager = LinearLayoutManager(context)
+        recyclerView.adapter = recyclerViewAdapter
+        recyclerView.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
 
         val intentFilter = IntentFilter()
         intentFilter.addAction(BluetoothDevice.ACTION_FOUND)                // 搜索发现设备
@@ -49,35 +62,48 @@ class DeviceFragment : BaseFragment() {
         this.requireContext().unregisterReceiver(searchDevicesBroadcastReceiver)
     }
 
+    @Suppress("UNUSED_PARAMETER")
+    private fun onClickRefresh(view: View) {
+        bluetoothAdapter?.startDiscovery()
+        recyclerViewAdapter.deviceList.clear()
+        recyclerViewAdapter.notifyDataSetChanged()
+    }
+
     private inner class SearchDevicesBroadcastReceiver : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action.toString() == BluetoothDevice.ACTION_FOUND) {
                 val device: BluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) ?: return
-                if (recyclerViewAdapter.deviceList.any { it.address == device.address }.not())
+                if (recyclerViewAdapter.deviceList.any { it.address == device.address }.not()) {
+                    logger.info("LOG:SearchDevicesBroadcastReceiver:onReceive:name={} ", device.name?.toString())
                     recyclerViewAdapter.deviceList.add(device)
-                recyclerViewAdapter.notifyDataSetChanged()
+                    recyclerViewAdapter.notifyDataSetChanged()
+                }
             }
         }
     }
 
-
     private inner class RecyclerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
-
+        val title: TextView = itemView.findViewById(com.qmuiteam.qmui.R.id.group_list_item_textView)
+        val description: TextView = itemView.findViewById(com.qmuiteam.qmui.R.id.group_list_item_detailTextView)
     }
 
     private inner class RecyclerViewAdapter : RecyclerView.Adapter<RecyclerViewHolder>() {
         val deviceList: ArrayList<BluetoothDevice> = ArrayList()
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerViewHolder {
-            val itemView: View = LayoutInflater.from(requireContext()).inflate(android.R.layout.simple_list_item_1, baseFragmentActivity.fragmentContainerView, false) as View
+            val context:Context = parent.context
+            val itemView:QMUICommonListItemView = QMUICommonListItemView(context)
+            val height:Int = context.resources.getDimension(com.qmuiteam.qmui.R.dimen.qmui_list_item_height).toInt()
+            itemView.layoutParams = LinearLayout. LayoutParams (LinearLayout.LayoutParams.MATCH_PARENT, height)
             return RecyclerViewHolder(itemView)
         }
 
         override fun onBindViewHolder(holder: RecyclerViewHolder, position: Int) {
             val bluetoothDevice: BluetoothDevice = deviceList[position]
-
+            val itemView:QMUICommonListItemView = holder.itemView as QMUICommonListItemView
+            itemView.text = bluetoothDevice.name ?: "无名称"
+            itemView.detailText =  bluetoothDevice.address?.toString()
         }
 
         override fun getItemCount(): Int = deviceList.size

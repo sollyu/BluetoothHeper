@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.qmuiteam.qmui.layout.QMUIConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/qmui_config_color_white">
+    android:background="@color/qmui_config_color_background"
+    android:fitsSystemWindows="true">
 
     <LinearLayout
         android:id="@+id/qmuiConstraintLayout"
@@ -79,8 +80,6 @@
                 android:text="发送" />
 
         </com.qmuiteam.qmui.layout.QMUILinearLayout>
-
-
     </LinearLayout>
 
     <com.qmuiteam.qmui.widget.QMUITopBarLayout
@@ -90,4 +89,4 @@
         android:fitsSystemWindows="true"
         tools:layout_height="?attr/qmui_topbar_height" />
 
-</com.qmuiteam.qmui.layout.QMUIConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
