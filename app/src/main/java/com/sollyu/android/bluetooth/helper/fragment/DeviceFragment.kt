@@ -65,12 +65,10 @@ class DeviceFragment : BaseFragment() {
     }
 
     private inner class SearchDevicesBroadcastReceiver : BroadcastReceiver() {
-
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action.toString() == BluetoothDevice.ACTION_FOUND) {
                 val device: BluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) ?: return
-                if (recyclerViewAdapter.deviceList.any { it.address == device.address }.not()) {
-                    logger.info("LOG:SearchDevicesBroadcastReceiver:onReceive:name={} ", device.name?.toString())
+                if (device.name?.isNotBlank() == true && recyclerViewAdapter.deviceList.any { it.address == device.address }.not()) {
                     recyclerViewAdapter.deviceList.add(device)
                     recyclerViewAdapter.notifyDataSetChanged()
                 }

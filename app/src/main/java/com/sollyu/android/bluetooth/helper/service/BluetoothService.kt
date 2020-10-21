@@ -1,6 +1,5 @@
 package com.sollyu.android.bluetooth.helper.service
 
-import android.app.Service
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothServerSocket
@@ -9,6 +8,8 @@ import android.content.Intent
 import android.os.IBinder
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.trello.rxlifecycle4.android.ActivityEvent
+import com.trello.rxlifecycle4.kotlin.bindUntilEvent
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.observers.DisposableObserver
@@ -18,47 +19,40 @@ import org.slf4j.LoggerFactory
 import java.io.InputStream
 import java.util.*
 
-class BluetoothService : Service() {
+class BluetoothService : BaseService() {
     private val binder: Binder = Binder()
     private val liveData: MutableLiveData<Action> = MutableLiveData()
 
-    private var readSize: Long = 0
-    private var writeSize: Long = 0
-
     private val SERVER_NAME = "BluetoothHelper"
-    private val SERVER_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    private val SERVER_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-    private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
+    private val mBluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
 
     private var mBluetoothSocket: BluetoothSocket? = null
-    private var connectObserver: ConnectObserver? = null
-
     private var mClientConnectObserver: ClientConnectObserver? = null
+    private var mServerConnectObserver: ServerConnectObserver? = null
+
     private var mReaderObserver: ReaderObserver? = null
 
     override fun onBind(intent: Intent?): IBinder = binder
 
-    enum class ActionType { CONNECTING, CONNECTED, DISCONNECT, READ, WRITE }
+    enum class ActionType { CONNECTING, CONNECTED, DISCONNECT, READ, WRITE, WAITING }
 
     data class Action(val action: ActionType, val param1: Any? = null, val param2: Any? = null)
-
-    override fun onCreate() {
-        super.onCreate()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        connectObserver?.dispose()
-    }
 
     /**
      * 等待被人连接
      */
-    private fun connectAsServer() {
-        connectObserver?.dispose()
-        connectObserver = ConnectObserver()
-        ConnectObservable().subscribe(connectObserver)
+    fun startWaitConnect() {
+        mServerConnectObserver?.dispose()
+        mServerConnectObserver = ServerConnectObserver()
+        ServerConnectObservable()
+            .bindUntilEvent(this, ActivityEvent.DESTROY)
+            .subscribeOn(Schedulers.newThread())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(mServerConnectObserver)
     }
+
 
     /**
      * 主动连接
@@ -66,10 +60,12 @@ class BluetoothService : Service() {
      * @param bluetoothDevice 蓝牙设备
      */
     fun connectAsClient(bluetoothDevice: BluetoothDevice) {
+        mServerConnectObserver?.dispose()
         mClientConnectObserver?.dispose()
         mClientConnectObserver = ClientConnectObserver()
         ClientConnectObservable(bluetoothDevice)
-            .subscribeOn(Schedulers.computation())
+            .bindUntilEvent(this, ActivityEvent.DESTROY)
+            .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(mClientConnectObserver)
     }
@@ -83,6 +79,8 @@ class BluetoothService : Service() {
         mBluetoothSocket = null
     }
 
+    fun isConnect(): Boolean = mBluetoothSocket?.isConnected ?: false
+
     fun write(byteArray: ByteArray) {
         mBluetoothSocket?.outputStream?.write(byteArray)
     }
@@ -93,26 +91,52 @@ class BluetoothService : Service() {
         fun getService(): BluetoothService = this@BluetoothService
     }
 
-    private inner class ConnectObservable : Observable<Unit>() {
-        override fun subscribeActual(observer: io.reactivex.rxjava3.core.Observer<in Unit>) {
-            val mmServerSocket: BluetoothServerSocket? = bluetoothAdapter?.listenUsingInsecureRfcommWithServiceRecord(SERVER_NAME, SERVER_UUID)
-            mBluetoothSocket = mmServerSocket?.accept()
-            observer.onComplete()
+    private inner class ServerConnectObservable : Observable<BluetoothSocket>() {
+        override fun subscribeActual(observer: io.reactivex.rxjava3.core.Observer<in BluetoothSocket>) {
+            try {
+                val mmServerSocket: BluetoothServerSocket = mBluetoothAdapter?.listenUsingInsecureRfcommWithServiceRecord(SERVER_NAME, SERVER_UUID) ?: throw IllegalStateException()
+                val bluetoothSocket: BluetoothSocket = mmServerSocket.accept()
+                if (bluetoothSocket.isConnected.not())
+                    bluetoothSocket.connect()
+                mmServerSocket.close()
+                observer.onNext(bluetoothSocket)
+                observer.onComplete()
+            } catch (e: Exception) {
+                observer.onError(e)
+            }
         }
     }
 
-    private inner class ConnectObserver : DisposableObserver<Unit>() {
+    private inner class ServerConnectObserver : DisposableObserver<BluetoothSocket>() {
         private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
-        override fun onNext(t: Unit?) {
-            logger.info("LOG:ConnectObserver:onNext:t={} ", t)
+
+        override fun onStart() {
+            super.onStart()
+            logger.info("LOG:ServerConnectObserver:onStart")
+            liveData.postValue(Action(action = ActionType.WAITING))
         }
 
-        override fun onError(e: Throwable?) {
-            logger.error("LOG:ConnectObserver:onError", e)
+        override fun onNext(t: BluetoothSocket?) {
+            logger.info("LOG:ServerConnectObserver:onNext t={}", t)
+            this@BluetoothService.mBluetoothSocket = t
+        }
+
+        override fun onError(e: Throwable) {
+            logger.error("LOG:ServerConnectObserver:onError", e)
+            liveData.postValue(Action(action = ActionType.DISCONNECT))
         }
 
         override fun onComplete() {
-            logger.info("LOG:ConnectObserver:onComplete:")
+            logger.info("LOG:ServerConnectObserver:onComplete")
+            liveData.postValue(Action(action = ActionType.CONNECTED))
+            liveData.postValue(Action(action = ActionType.CONNECTED))
+            mReaderObserver?.dispose()
+            mReaderObserver = ReaderObserver()
+            ReaderObservable()
+                .bindUntilEvent(this@BluetoothService, ActivityEvent.DESTROY)
+                .subscribeOn(Schedulers.computation())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(mReaderObserver)
         }
     }
 
@@ -133,20 +157,27 @@ class BluetoothService : Service() {
     }
 
     private inner class ClientConnectObserver : DisposableObserver<BluetoothSocket>() {
+
+        private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
+
         override fun onStart() {
             super.onStart()
             liveData.postValue(Action(action = ActionType.CONNECTING))
+            logger.info("LOG:ClientConnectObserver:onStart")
         }
 
         override fun onNext(t: BluetoothSocket) {
             this@BluetoothService.mBluetoothSocket = t
+            logger.info("LOG:ClientConnectObserver:onNext t={}", t)
         }
 
         override fun onError(e: Throwable) {
+            logger.error("LOG:ClientConnectObserver:onError", e)
             liveData.postValue(Action(action = ActionType.DISCONNECT))
         }
 
         override fun onComplete() {
+            logger.info("LOG:ClientConnectObserver:onComplete")
             liveData.postValue(Action(action = ActionType.CONNECTED))
             mReaderObserver?.dispose()
             mReaderObserver = ReaderObserver()
@@ -172,6 +203,9 @@ class BluetoothService : Service() {
         }
     }
 
+    /**
+     * 读取线程
+     */
     private inner class ReaderObserver : DisposableObserver<ByteArray>() {
         override fun onNext(t: ByteArray?) {
             liveData.postValue(Action(action = ActionType.READ, param1 = t))
@@ -179,9 +213,13 @@ class BluetoothService : Service() {
 
         override fun onError(e: Throwable?) {
             liveData.postValue(Action(action = ActionType.DISCONNECT))
+            mBluetoothSocket?.inputStream?.close()
+            mBluetoothSocket?.outputStream?.close()
+            mBluetoothSocket = null
         }
 
         override fun onComplete() {
         }
     }
+
 }

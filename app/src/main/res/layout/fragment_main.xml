@@ -53,6 +53,7 @@
             <androidx.appcompat.widget.AppCompatTextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:id="@+id/tvReceive"
                 android:hint="接收区" />
 
         </ScrollView>
@@ -63,6 +64,7 @@
             android:orientation="horizontal">
 
             <androidx.appcompat.widget.AppCompatCheckBox
+                android:id="@+id/cbHex"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="false"
