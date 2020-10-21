@@ -83,6 +83,7 @@ class BluetoothService : BaseService() {
 
     fun write(byteArray: ByteArray) {
         mBluetoothSocket?.outputStream?.write(byteArray)
+        liveData.postValue(Action(action = ActionType.WRITE, param1 = byteArray))
     }
 
     fun getLiveDate(): LiveData<Action> = liveData

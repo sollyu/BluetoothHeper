@@ -9,6 +9,8 @@
     <string name="fragment_main_bluetooth_status_connected">connected</string>
     <string name="fragment_main_bluetooth_status_disconnect">disconnect</string>
     <string name="fragment_main_bluetooth_status_waiting">waiting</string>
+    <string name="fragment_main_statistics_receive">RX %1$d</string>
+    <string name="fragment_main_statistics_write">TX %1$d</string>
 
     <string name="fragment_settings_title">fragment_settings_title</string>
     <string name="fragment_about_title">fragment_about_title</string>

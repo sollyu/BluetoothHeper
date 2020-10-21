@@ -28,20 +28,24 @@
                 android:text="蓝牙未连接" />
 
             <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvReceiveCount"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="3"
-                android:background="@color/qmui_config_color_blue"
+                android:background="@color/fragment_main_statistics_receive_default"
                 android:gravity="center"
-                android:text="RX 0" />
+                android:text="RX 0"
+                android:textColor="@android:color/white" />
 
             <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvWriteCount"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="3"
-                android:background="@color/qmui_config_color_red"
+                android:background="@color/fragment_main_statistics_write_default"
                 android:gravity="center"
-                android:text="TX 0" />
+                android:text="TX 0"
+                android:textColor="@android:color/white" />
         </com.qmuiteam.qmui.layout.QMUILinearLayout>
 
         <ScrollView
@@ -51,9 +55,9 @@
             android:fillViewport="true">
 
             <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvReceive"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/tvReceive"
                 android:hint="接收区" />
 
         </ScrollView>
