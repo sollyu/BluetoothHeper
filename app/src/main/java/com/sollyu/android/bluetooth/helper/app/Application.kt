@@ -61,6 +61,9 @@ class Application : Application(), Thread.UncaughtExceptionHandler {
             get() : String = raw.getString(Constant.PREFERENCES_KEY_CHARSET, Constant.PREFERENCES_DEFAULT_CHARSET) ?: Constant.PREFERENCES_DEFAULT_CHARSET
             set(value: String) = raw.edit().putString(Constant.PREFERENCES_KEY_CHARSET, value).apply()
 
+        var appendText: String
+            get() : String = raw.getString(Constant.PREFERENCES_KEY_APPEND_TEXT, Constant.PREFERENCES_DEFAULT_APPEND_TEXT) ?: Constant.PREFERENCES_DEFAULT_APPEND_TEXT
+            set(value: String) = raw.edit().putString(Constant.PREFERENCES_KEY_APPEND_TEXT, value).apply()
 
     }
 

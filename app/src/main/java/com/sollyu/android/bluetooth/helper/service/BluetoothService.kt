@@ -86,6 +86,8 @@ class BluetoothService : BaseService() {
         liveData.postValue(Action(action = ActionType.WRITE, param1 = byteArray))
     }
 
+    fun getDevice(): BluetoothDevice? = mBluetoothSocket?.remoteDevice
+
     fun getLiveDate(): LiveData<Action> = liveData
 
     inner class Binder : android.os.Binder() {

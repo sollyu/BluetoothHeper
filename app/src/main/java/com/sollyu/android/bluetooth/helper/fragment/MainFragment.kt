@@ -12,19 +12,25 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.CompoundButton
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.lifecycle.Observer
+import cn.maizz.kotlin.extension.android.content.setClipboardString
 import cn.maizz.kotlin.extension.android.widget.postDelayed
+import cn.maizz.kotlin.extension.java.util.format
 import com.google.android.material.snackbar.Snackbar
 import com.google.common.io.BaseEncoding
 import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet
+import com.sollyu.android.bluetooth.helper.BuildConfig
 import com.sollyu.android.bluetooth.helper.R
 import com.sollyu.android.bluetooth.helper.app.Application
 import com.sollyu.android.bluetooth.helper.service.BluetoothService
 import kotlinx.android.synthetic.main.fragment_main.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.nio.charset.Charset
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothService.Action>, TextView.OnEditorActionListener {
@@ -56,6 +62,7 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
 
         btnSend.setOnClickListener(this::onClickBtnSend)
         cbHex.setOnCheckedChangeListener(this::onHexCheckedChanged)
+        tvReceive.setOnLongClickListener(this::onOutputLongClickListener)
 
         val context: Context = requireContext()
         val bindIntent = Intent(context, BluetoothService::class.java)
@@ -93,19 +100,36 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
 
     private fun onClickBtnSend(view: View) {
         val inputString: String = edtMessage.text?.toString() ?: return
-        val writeDate: ByteArray = if (Application.Instance.sharedPreferences.isHex.not())
-            inputString.toByteArray()
-        else
+        var writeDate: ByteArray = ByteArray(0)
+
+        // 以十六进制发送
+        if (Application.Instance.sharedPreferences.isHex) {
             try {
-                BaseEncoding.base16().decode(inputString)
+                writeDate = BaseEncoding.base16().decode(inputString)
             } catch (e: Exception) {
                 Snackbar.make(view, R.string.fragment_main_snackbar_hex_convert_normal_fail, Snackbar.LENGTH_SHORT).show()
-                ByteArray(0)
             }
+        } else {
+            writeDate = inputString.toByteArray()
+        }
 
+        // 尾部插入跟随
+        if (Application.Instance.sharedPreferences.appendText.isNotEmpty()) {
+            try {
+                val appendByteArray: ByteArray = BaseEncoding.base16().decode(Application.Instance.sharedPreferences.appendText)
+                writeDate = writeDate.plus(appendByteArray)
+            } catch (e: Exception) {
+                logger.error("LOG:MainFragment:onClickBtnSend", e)
+            }
+        }
+
+        // 判空
         if (writeDate.isEmpty()) {
             return
         }
+
+        logger.info("LOG:MainFragment:onClickBtnSend writeDate={}", writeDate)
+
         mBluetoothServiceBinder?.getService()?.write(writeDate)
         if (Application.Instance.sharedPreferences.isSendClean)
             edtMessage.text = null
@@ -149,7 +173,6 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             edtMessage.setText(normal)
             edtMessage.setSelection(normal.length)
         }
-
     }
 
     @Suppress(names = ["UNUSED_PARAMETER"])
@@ -160,6 +183,61 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             "settings" -> this.startFragmentForResult(SettingsFragment(), requestCodeSetting)
             "about" -> this.startFragment(AboutFragment())
             "disconnect" -> mBluetoothServiceBinder?.getService()?.disconnect()
+        }
+    }
+
+    private fun onOutputLongClickListener(view: View): Boolean {
+        val context: Context = view.context
+        QMUIBottomSheet.BottomListSheetBuilder(context)
+            .setSkinManager(Application.Instance.qmuiSkinManager)
+            .setTitle(context.getString(R.string.fragment_main_message_menu_title))
+            .setAddCancelBtn(true)
+            .setAllowDrag(true)
+            .setGravityCenter(true)
+            .addItem(context.getString(R.string.fragment_main_message_menu_clean), "clean")
+            .addItem(context.getString(R.string.fragment_main_message_menu_copy), "copy")
+            .addItem(context.getString(R.string.fragment_main_message_menu_save), "save")
+            .setOnSheetItemClickListener(this::onOutputLongClickMenuItem)
+            .build()
+            .show()
+
+        return true
+    }
+
+    @Suppress(names = ["UNUSED_PARAMETER"])
+    private fun onOutputLongClickMenuItem(qmuiBottomSheet: QMUIBottomSheet, itemView: View, position: Int, tag: String) {
+        qmuiBottomSheet.dismiss()
+        val context: Context = itemView.context
+        when (tag) {
+            "clean" -> {
+                tvReceive.text = ""
+                mWriteCount = 0
+                mReceiveCount = 0
+                tvWriteCount.text = context.getString(R.string.fragment_main_statistics_write, mWriteCount)
+                tvReceiveCount.text = context.getString(R.string.fragment_main_statistics_receive, mReceiveCount)
+            }
+            "copy" -> {
+                val outputString: String = tvReceive.text?.toString() ?: return
+                if (outputString.isBlank())
+                    return
+                tvReceive.context.setClipboardString(outputString)
+            }
+            "save" -> {
+                val outputString: String = tvReceive.text?.toString() ?: ""
+                val outputFile: File = File(context.getExternalFilesDir("log"), Date().format(format = "yyyy-MM-dd HHmmss").plus(other = ".txt"))
+                val outputStringBuilder: StringBuilder = StringBuilder()
+                val appName: String = context.getString(R.string.app_name)
+                outputStringBuilder.append(context.getString(R.string.fragment_main_log_header_app, appName))
+                outputStringBuilder.append(context.getString(R.string.fragment_main_log_header_version, BuildConfig.VERSION_NAME))
+                if (mBluetoothServiceBinder?.getService()?.isConnect() == true) {
+                    outputStringBuilder.append(context.getString(R.string.fragment_main_log_header_device, mBluetoothServiceBinder?.getService()?.getDevice()?.name))
+                    outputStringBuilder.append(context.getString(R.string.fragment_main_log_header_address, mBluetoothServiceBinder?.getService()?.getDevice()?.address))
+                }
+                outputStringBuilder.append(context.getString(R.string.fragment_main_log_header_time, Date().format()))
+                outputStringBuilder.append(outputString)
+                outputFile.writeText(outputStringBuilder.toString(), mCharset)
+                Snackbar.make(requireView(), context.getString(R.string.fragment_main_snackbar_save_log_success, outputFile), Snackbar.LENGTH_LONG).show()
+            }
         }
     }
 
@@ -206,14 +284,12 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             }
             BluetoothService.ActionType.READ -> {
                 val rawByteArray: ByteArray = t.param1 as ByteArray
-                val displayString: String = if (Application.Instance.sharedPreferences.isHex) {
+                val displayString: String = if (Application.Instance.sharedPreferences.isHex)
                     BaseEncoding.base16().encode(rawByteArray).chunked(size = 2).joinToString(separator = " ")
-                } else
+                else
                     String(rawByteArray)
 
                 val history: String = tvReceive.text.toString()
-                logger.info("LOG:MainFragment:onChanged rawByteArray={}", rawByteArray)
-
                 tvReceive.text = String.format("%s%s", history, displayString)
                 mReceiveCount += rawByteArray.size
                 tvReceiveCount.text = context.getString(R.string.fragment_main_statistics_receive, mReceiveCount)
@@ -224,6 +300,7 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
                     tvReceiveCount.setBackgroundColor(mColorReaderDefault)
                     tvReceiveCount.setTextColor(mColorTextWhite)
                 }
+                tvReceive.post { scrollView.fullScroll(ScrollView.FOCUS_DOWN) }
             }
             BluetoothService.ActionType.WRITE -> {
                 val rawByteArray: ByteArray = t.param1 as ByteArray

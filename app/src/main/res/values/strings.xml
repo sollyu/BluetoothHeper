@@ -2,6 +2,16 @@
     <string name="app_name">BluetoothHelper</string>
     <string name="fragment_main_message_hit_ascii">ASCII</string>
     <string name="fragment_main_message_hit_hex">HEX</string>
+    <string name="fragment_main_message_menu_title">Title</string>
+    <string name="fragment_main_message_menu_clean">Clean</string>
+    <string name="fragment_main_message_menu_copy">Copy</string>
+    <string name="fragment_main_message_menu_save">Save</string>
+    <string name="fragment_main_log_header_app">AppName: %1$s\n</string>
+    <string name="fragment_main_log_header_version">AppVersion: %1$s\n</string>
+    <string name="fragment_main_log_header_device">DeviceName: %1$s\n</string>
+    <string name="fragment_main_log_header_address">DeviceAddress: %1$s\n</string>
+    <string name="fragment_main_log_header_time">LogTime: %1$s\n\n</string>
+
     <string name="fragment_main_menu_title">menu_title</string>
     <string name="fragment_main_menu_settings">menu_settings</string>
     <string name="fragment_main_menu_device_list">menu_device_list</string>
@@ -14,6 +24,7 @@
     <string name="fragment_main_statistics_receive">RX %1$d</string>
     <string name="fragment_main_statistics_write">TX %1$d</string>
     <string name="fragment_main_snackbar_hex_convert_normal_fail">Parser Hex Fail</string>
+    <string name="fragment_main_snackbar_save_log_success">Saved: %1$s</string>
 
     <string name="fragment_settings_title">fragment_settings_title</string>
     <string name="fragment_about_title">fragment_about_title</string>
