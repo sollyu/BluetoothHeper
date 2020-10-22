@@ -46,6 +46,7 @@ dependencies {
     implementation 'org.slf4j:slf4j-android:1.7.30'
     implementation 'org.greenrobot:eventbus:3.2.0'
     implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.guava:guava:30.0-android'
 
     implementation 'io.reactivex.rxjava3:rxkotlin:3.0.0'
     implementation 'com.trello.rxlifecycle4:rxlifecycle-kotlin:4.0.0'

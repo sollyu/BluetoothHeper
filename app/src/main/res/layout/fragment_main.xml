@@ -79,7 +79,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="ASCII" />
+                android:hint="@string/fragment_main_message_hit_ascii" />
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnSend"

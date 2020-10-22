@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">BluetoothHelper</string>
+    <string name="fragment_main_message_hit_ascii">ASCII</string>
+    <string name="fragment_main_message_hit_hex">HEX</string>
     <string name="fragment_main_menu_title">menu_title</string>
     <string name="fragment_main_menu_settings">menu_settings</string>
     <string name="fragment_main_menu_device_list">menu_device_list</string>
@@ -11,8 +13,10 @@
     <string name="fragment_main_bluetooth_status_waiting">waiting</string>
     <string name="fragment_main_statistics_receive">RX %1$d</string>
     <string name="fragment_main_statistics_write">TX %1$d</string>
+    <string name="fragment_main_snackbar_hex_convert_normal_fail">Parser Hex Fail</string>
 
     <string name="fragment_settings_title">fragment_settings_title</string>
     <string name="fragment_about_title">fragment_about_title</string>
     <string name="fragment_device_title">fragment_device_title</string>
+
 </resources>

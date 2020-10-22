@@ -7,10 +7,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.widget.CompoundButton
+import android.widget.TextView
 import androidx.lifecycle.Observer
 import cn.maizz.kotlin.extension.android.widget.postDelayed
+import com.google.android.material.snackbar.Snackbar
+import com.google.common.io.BaseEncoding
 import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet
 import com.sollyu.android.bluetooth.helper.R
 import com.sollyu.android.bluetooth.helper.app.Application
@@ -18,11 +24,14 @@ import com.sollyu.android.bluetooth.helper.service.BluetoothService
 import kotlinx.android.synthetic.main.fragment_main.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
 
-class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothService.Action> {
+class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothService.Action>, TextView.OnEditorActionListener {
 
     private val requestCodeDevice: Int = 932
+    private val requestCodeSetting: Int = 821
+
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
     private var mBluetoothServiceBinder: BluetoothService.Binder? = null
 
@@ -35,6 +44,7 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
     private var mColorReaderHighlight: Int = 0
     private var mColorTextBlack: Int = 0
     private var mColorTextWhite: Int = 0
+    private var mCharset: Charset = Charsets.UTF_8
 
     override fun onCreateView(): View =
         LayoutInflater.from(requireContext()).inflate(R.layout.fragment_main, baseFragmentActivity.fragmentContainerView, false) as View
@@ -45,6 +55,7 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
         qmuiTopBarLayout.addRightImageButton(R.drawable.ic_more, R.id.menu_more).setOnClickListener(this::onClickMenuMore)
 
         btnSend.setOnClickListener(this::onClickBtnSend)
+        cbHex.setOnCheckedChangeListener(this::onHexCheckedChanged)
 
         val context: Context = requireContext()
         val bindIntent = Intent(context, BluetoothService::class.java)
@@ -57,6 +68,8 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             mColorWriteHighlight = context.resources.getColor(R.color.fragment_main_statistics_write_highlight)
             mColorTextBlack = context.resources.getColor(android.R.color.black)
             mColorTextWhite = context.resources.getColor(android.R.color.white)
+
+            this.onReloadSetting()
         }
     }
 
@@ -72,11 +85,30 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             mBluetoothServiceBinder?.getService()?.connectAsClient(bluetoothDevice)
             logger.info("LOG:MainFragment:onFragmentResult:bluetoothDevice={} ", bluetoothDevice.address)
         }
+
+        if (requestCode == requestCodeSetting) {
+            onReloadSetting()
+        }
     }
 
     private fun onClickBtnSend(view: View) {
-        val data: ByteArray = edtMessage.text?.toString()?.toByteArray() ?: return
-        mBluetoothServiceBinder?.getService()?.write(data)
+        val inputString: String = edtMessage.text?.toString() ?: return
+        val writeDate: ByteArray = if (Application.Instance.sharedPreferences.isHex.not())
+            inputString.toByteArray()
+        else
+            try {
+                BaseEncoding.base16().decode(inputString)
+            } catch (e: Exception) {
+                Snackbar.make(view, R.string.fragment_main_snackbar_hex_convert_normal_fail, Snackbar.LENGTH_SHORT).show()
+                ByteArray(0)
+            }
+
+        if (writeDate.isEmpty()) {
+            return
+        }
+        mBluetoothServiceBinder?.getService()?.write(writeDate)
+        if (Application.Instance.sharedPreferences.isSendClean)
+            edtMessage.text = null
     }
 
     private fun onClickMenuMore(view: View) {
@@ -99,11 +131,33 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             .show()
     }
 
+    private fun onHexCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
+        Application.Instance.sharedPreferences.isHex = isChecked
+        edtMessage.setHint(if (isChecked) R.string.fragment_main_message_hit_hex else R.string.fragment_main_message_hit_ascii)
+        val inputMessage: String = edtMessage.text.toString()
+        if (inputMessage.isNotEmpty() && isChecked) {
+            val hexString: String = BaseEncoding.base16().encode(inputMessage.toByteArray()).chunked(size = 2).joinToString(separator = " ")
+            edtMessage.setText(hexString)
+            edtMessage.setSelection(hexString.length)
+        } else {
+            val normal: String = try {
+                String(BaseEncoding.base16().decode(inputMessage.replace(oldValue = " ", newValue = "")), mCharset)
+            } catch (e: Exception) {
+                Snackbar.make(buttonView, R.string.fragment_main_snackbar_hex_convert_normal_fail, Snackbar.LENGTH_SHORT).show()
+                inputMessage
+            }
+            edtMessage.setText(normal)
+            edtMessage.setSelection(normal.length)
+        }
+
+    }
+
+    @Suppress(names = ["UNUSED_PARAMETER"])
     private fun onClickMenuMoreItem(qmuiBottomSheet: QMUIBottomSheet, itemView: View, position: Int, tag: String) {
         qmuiBottomSheet.dismiss()
         when (tag) {
             "device_list" -> this.startFragmentForResult(DeviceFragment(), requestCodeDevice)
-            "settings" -> this.startFragment(SettingsFragment())
+            "settings" -> this.startFragmentForResult(SettingsFragment(), requestCodeSetting)
             "about" -> this.startFragment(AboutFragment())
             "disconnect" -> mBluetoothServiceBinder?.getService()?.disconnect()
         }
@@ -126,6 +180,9 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
         this.mBluetoothServiceBinder = null
     }
 
+    /**
+     * LiveData发生改变
+     */
     override fun onChanged(t: BluetoothService.Action) {
         logger.info("LOG:MainFragment:onChanged t={}", t)
         val context: Context = requireContext()
@@ -149,10 +206,15 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             }
             BluetoothService.ActionType.READ -> {
                 val rawByteArray: ByteArray = t.param1 as ByteArray
-                val data: String = String(rawByteArray)
+                val displayString: String = if (Application.Instance.sharedPreferences.isHex) {
+                    BaseEncoding.base16().encode(rawByteArray).chunked(size = 2).joinToString(separator = " ")
+                } else
+                    String(rawByteArray)
+
                 val history: String = tvReceive.text.toString()
-                logger.info("LOG:MainFragment:onChanged data={}", data)
-                tvReceive.text = history + data
+                logger.info("LOG:MainFragment:onChanged rawByteArray={}", rawByteArray)
+
+                tvReceive.text = String.format("%s%s", history, displayString)
                 mReceiveCount += rawByteArray.size
                 tvReceiveCount.text = context.getString(R.string.fragment_main_statistics_receive, mReceiveCount)
 
@@ -178,5 +240,28 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
         }
     }
 
+    private fun onReloadSetting() {
+        if (Application.Instance.sharedPreferences.isSingleLine) {
+            edtMessage.isSingleLine = true
+            edtMessage.maxLines = 1
+            edtMessage.imeOptions = EditorInfo.IME_ACTION_SEND
+            edtMessage.setOnEditorActionListener(this)
+        } else {
+            edtMessage.isSingleLine = false
+            edtMessage.maxLines = 999
+            edtMessage.imeOptions = EditorInfo.IME_ACTION_NONE
+            edtMessage.setOnEditorActionListener(null)
+        }
+
+        mCharset = Charset.forName(Application.Instance.sharedPreferences.charset)
+        cbHex.isChecked = Application.Instance.sharedPreferences.isHex
+    }
+
+    override fun onEditorAction(v: TextView?, actionId: Int, event: KeyEvent?): Boolean {
+        if (actionId == EditorInfo.IME_ACTION_SEND) {
+            btnSend.performClick()
+        }
+        return true
+    }
 
 }
