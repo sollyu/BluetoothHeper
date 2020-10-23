@@ -43,24 +43,46 @@ class Application : Application(), Thread.UncaughtExceptionHandler {
     }
 
     class SharedPreferences {
-        private val raw: android.content.SharedPreferences = android.preference.PreferenceManager.getDefaultSharedPreferences(Instance)
+        val raw: android.content.SharedPreferences = android.preference.PreferenceManager.getDefaultSharedPreferences(Instance)
 
+        /**
+         * 回车键发送
+         */
         var isSingleLine: Boolean
             get() :Boolean = raw.getBoolean(Constant.PREFERENCES_KEY_SINGLE_LINE, Constant.PREFERENCES_DEFAULT_SINGLE_LINE)
             set(value: Boolean) = raw.edit().putBoolean(Constant.PREFERENCES_KEY_SINGLE_LINE, value).apply()
 
+        /**
+         * 发送后清空输入框
+         */
         var isSendClean: Boolean
             get() : Boolean = raw.getBoolean(Constant.PREFERENCES_KEY_CLEAN_SEND, Constant.PREFERENCES_DEFAULT_CLEAN_SEND)
             set(value: Boolean) = raw.edit().putBoolean(Constant.PREFERENCES_KEY_CLEAN_SEND, value).apply()
 
+        /**
+         * 是否十六进制模式
+         */
         var isHex: Boolean
             get() : Boolean = raw.getBoolean(Constant.PREFERENCES_KEY_HEX, Constant.PREFERENCES_DEFAULT_HEX)
             set(value: Boolean) = raw.edit().putBoolean(Constant.PREFERENCES_KEY_HEX, value).apply()
 
+        /**
+         * 是否快捷键模式
+         */
+        var isShortcut: Boolean
+            get() : Boolean = raw.getBoolean(Constant.PREFERENCES_KEY_SHORTCUT, Constant.PREFERENCES_DEFAULT_SHORTCUT)
+            set(value: Boolean) = raw.edit().putBoolean(Constant.PREFERENCES_KEY_SHORTCUT, value).apply()
+
+        /**
+         * 发送字符集
+         */
         var charset: String
             get() : String = raw.getString(Constant.PREFERENCES_KEY_CHARSET, Constant.PREFERENCES_DEFAULT_CHARSET) ?: Constant.PREFERENCES_DEFAULT_CHARSET
             set(value: String) = raw.edit().putString(Constant.PREFERENCES_KEY_CHARSET, value).apply()
 
+        /**
+         * 回车发送追加字符
+         */
         var appendText: String
             get() : String = raw.getString(Constant.PREFERENCES_KEY_APPEND_TEXT, Constant.PREFERENCES_DEFAULT_APPEND_TEXT) ?: Constant.PREFERENCES_DEFAULT_APPEND_TEXT
             set(value: String) = raw.edit().putString(Constant.PREFERENCES_KEY_APPEND_TEXT, value).apply()

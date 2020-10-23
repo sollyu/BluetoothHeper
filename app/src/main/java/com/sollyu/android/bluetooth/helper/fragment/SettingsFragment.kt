@@ -13,6 +13,8 @@ import com.sollyu.android.bluetooth.helper.app.Application
 import kotlinx.android.synthetic.main.fragment_settings.*
 
 class SettingsFragment : BaseFragment() {
+
+
     override fun onCreateView(): View =
         LayoutInflater.from(requireContext()).inflate(R.layout.fragment_settings, baseFragmentActivity.fragmentContainerView, false) as View
 
@@ -21,6 +23,10 @@ class SettingsFragment : BaseFragment() {
         qmuiTopBarLayout.setTitle(R.string.fragment_settings_title)
         qmuiTopBarLayout.addLeftBackImageButton().setOnClickListener { this.popBackStackResult(resultCode = Activity.RESULT_CANCELED, data = null) }
 
+        onRefreshUi()
+    }
+
+    private fun onRefreshUi() {
         val listItemHeight: Int = com.qmuiteam.qmui.util.QMUIResHelper.getAttrDimen(context, com.qmuiteam.qmui.R.attr.qmui_list_item_height)
 
         val context: Context = requireActivity()
@@ -41,7 +47,6 @@ class SettingsFragment : BaseFragment() {
             .addTo(qmuiGroupListView)
     }
 
-
     @Suppress(names = ["UNUSED_PARAMETER"])
     private fun onSingleLineCheckedChangeListener(buttonView: CompoundButton, isChecked: Boolean) {
         Application.Instance.sharedPreferences.isSingleLine = isChecked
@@ -51,6 +56,5 @@ class SettingsFragment : BaseFragment() {
     private fun onSendCleanCheckedChangeListener(buttonView: CompoundButton, isChecked: Boolean) {
         Application.Instance.sharedPreferences.isSendClean = isChecked
     }
-
 
 }

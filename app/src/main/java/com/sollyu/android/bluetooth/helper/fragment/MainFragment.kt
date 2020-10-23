@@ -20,10 +20,13 @@ import cn.maizz.kotlin.extension.android.widget.postDelayed
 import cn.maizz.kotlin.extension.java.util.format
 import com.google.android.material.snackbar.Snackbar
 import com.google.common.io.BaseEncoding
+import com.google.gson.Gson
 import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet
 import com.sollyu.android.bluetooth.helper.BuildConfig
 import com.sollyu.android.bluetooth.helper.R
 import com.sollyu.android.bluetooth.helper.app.Application
+import com.sollyu.android.bluetooth.helper.bean.Constant
+import com.sollyu.android.bluetooth.helper.bean.ShortcutBean
 import com.sollyu.android.bluetooth.helper.service.BluetoothService
 import kotlinx.android.synthetic.main.fragment_main.*
 import org.slf4j.Logger
@@ -37,6 +40,7 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
 
     private val requestCodeDevice: Int = 932
     private val requestCodeSetting: Int = 821
+    private val requestCodeShortcut: Int = 232
 
     private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
     private var mBluetoothServiceBinder: BluetoothService.Binder? = null
@@ -58,11 +62,22 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
     override fun onViewCreated(rootView: View) {
         super.onViewCreated(rootView)
         qmuiTopBarLayout.setTitle(R.string.app_name)
-        qmuiTopBarLayout.addRightImageButton(R.drawable.ic_more, R.id.menu_more).setOnClickListener(this::onClickMenuMore)
+        qmuiTopBarLayout.addRightImageButton(R.drawable.ic_more, R.id.menu_more).setOnClickListener(this::onClickListenerMore)
 
-        btnSend.setOnClickListener(this::onClickBtnSend)
-        cbHex.setOnCheckedChangeListener(this::onHexCheckedChanged)
-        tvReceive.setOnLongClickListener(this::onOutputLongClickListener)
+        btnSend.setOnClickListener(this::onClickListenerSend)
+        cbHex.setOnCheckedChangeListener(this::onCheckedChangedHex)
+        tvReceive.setOnLongClickListener(this::onLongClickListenerOutput)
+
+        btnShortcut01.setOnClickListener(this::onClickListenerShortcut)
+        btnShortcut02.setOnClickListener(this::onClickListenerShortcut)
+        btnShortcut03.setOnClickListener(this::onClickListenerShortcut)
+        btnShortcut04.setOnClickListener(this::onClickListenerShortcut)
+        btnShortcut05.setOnClickListener(this::onClickListenerShortcut)
+        btnShortcut01.setOnLongClickListener(this::onLongClickListenerShortcut)
+        btnShortcut02.setOnLongClickListener(this::onLongClickListenerShortcut)
+        btnShortcut03.setOnLongClickListener(this::onLongClickListenerShortcut)
+        btnShortcut04.setOnLongClickListener(this::onLongClickListenerShortcut)
+        btnShortcut05.setOnLongClickListener(this::onLongClickListenerShortcut)
 
         val context: Context = requireContext()
         val bindIntent = Intent(context, BluetoothService::class.java)
@@ -93,12 +108,19 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             logger.info("LOG:MainFragment:onFragmentResult:bluetoothDevice={} ", bluetoothDevice.address)
         }
 
-        if (requestCode == requestCodeSetting) {
+        if (requestCode == requestCodeSetting && resultCode == Activity.RESULT_OK) {
+            onReloadSetting()
+        }
+
+        if (requestCode == requestCodeShortcut && resultCode == Activity.RESULT_OK) {
             onReloadSetting()
         }
     }
 
-    private fun onClickBtnSend(view: View) {
+    private fun onClickListenerSend(view: View) {
+        if (btnSend.isEnabled.not())
+            return
+
         val inputString: String = edtMessage.text?.toString() ?: return
         var writeDate: ByteArray = ByteArray(0)
 
@@ -135,7 +157,7 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             edtMessage.text = null
     }
 
-    private fun onClickMenuMore(view: View) {
+    private fun onClickListenerMore(view: View) {
         val context: Context = view.context
         val sheetBuilder: QMUIBottomSheet.BottomListSheetBuilder = QMUIBottomSheet.BottomListSheetBuilder(context)
             .setSkinManager(Application.Instance.qmuiSkinManager)
@@ -150,12 +172,44 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
         if (mBluetoothServiceBinder?.getService()?.isConnect() == true)
             sheetBuilder.addItem(context.getString(R.string.fragment_main_menu_disconnect), "disconnect")
 
+        if (Application.Instance.sharedPreferences.isShortcut)
+            sheetBuilder.addItem(context.getString(R.string.fragment_main_menu_input), "mode_input")
+        else
+            sheetBuilder.addItem(context.getString(R.string.fragment_main_menu_shortcut), "mode_shortcut")
+
         sheetBuilder.setOnSheetItemClickListener(this::onClickMenuMoreItem)
             .build()
             .show()
     }
 
-    private fun onHexCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
+    private fun onClickListenerShortcut(view: View) {
+        val gson: Gson = Gson()
+        val name: String = view.tag.toString()
+        val save: String = Application.Instance.sharedPreferences.raw.getString(Constant.PREFERENCES_KEY_SHORTCUT + "_" + name, "{}") ?: "{}"
+        val shortcutBean: ShortcutBean = gson.fromJson(save, ShortcutBean::class.java)
+        logger.info("LOG:MainFragment:onClickListenerShortcut name={} shortcutBean={}", name, shortcutBean)
+        var writeDate: ByteArray = ByteArray(0)
+
+        // 以十六进制发送
+        if (shortcutBean.hex == true) {
+            try {
+                writeDate = BaseEncoding.base16().decode(shortcutBean.text.toString())
+            } catch (e: Exception) {
+                Snackbar.make(view, R.string.fragment_main_snackbar_hex_convert_normal_fail, Snackbar.LENGTH_SHORT).show()
+            }
+        } else {
+            writeDate = shortcutBean.text.toString().toByteArray()
+        }
+
+        // 判空
+        if (writeDate.isEmpty()) {
+            return
+        }
+
+        mBluetoothServiceBinder?.getService()?.write(writeDate)
+    }
+
+    private fun onCheckedChangedHex(buttonView: CompoundButton, isChecked: Boolean) {
         Application.Instance.sharedPreferences.isHex = isChecked
         edtMessage.setHint(if (isChecked) R.string.fragment_main_message_hit_hex else R.string.fragment_main_message_hit_ascii)
         val inputMessage: String = edtMessage.text.toString()
@@ -179,14 +233,30 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
     private fun onClickMenuMoreItem(qmuiBottomSheet: QMUIBottomSheet, itemView: View, position: Int, tag: String) {
         qmuiBottomSheet.dismiss()
         when (tag) {
-            "device_list" -> this.startFragmentForResult(DeviceFragment(), requestCodeDevice)
-            "settings" -> this.startFragmentForResult(SettingsFragment(), requestCodeSetting)
-            "about" -> this.startFragment(AboutFragment())
-            "disconnect" -> mBluetoothServiceBinder?.getService()?.disconnect()
+            "device_list" -> {
+                this.startFragmentForResult(DeviceFragment(), requestCodeDevice)
+            }
+            "settings" -> {
+                this.startFragmentForResult(SettingsFragment(), requestCodeSetting)
+            }
+            "about" -> {
+                this.startFragment(AboutFragment())
+            }
+            "disconnect" -> {
+                mBluetoothServiceBinder?.getService()?.disconnect()
+            }
+            "mode_input" -> {
+                Application.Instance.sharedPreferences.isShortcut = false
+                onReloadSetting()
+            }
+            "mode_shortcut" -> {
+                Application.Instance.sharedPreferences.isShortcut = true
+                onReloadSetting()
+            }
         }
     }
 
-    private fun onOutputLongClickListener(view: View): Boolean {
+    private fun onLongClickListenerOutput(view: View): Boolean {
         val context: Context = view.context
         QMUIBottomSheet.BottomListSheetBuilder(context)
             .setSkinManager(Application.Instance.qmuiSkinManager)
@@ -197,15 +267,20 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             .addItem(context.getString(R.string.fragment_main_message_menu_clean), "clean")
             .addItem(context.getString(R.string.fragment_main_message_menu_copy), "copy")
             .addItem(context.getString(R.string.fragment_main_message_menu_save), "save")
-            .setOnSheetItemClickListener(this::onOutputLongClickMenuItem)
+            .setOnSheetItemClickListener(this::onClickListenerMenuItemOutput)
             .build()
             .show()
 
         return true
     }
 
+    private fun onLongClickListenerShortcut(view: View): Boolean {
+        startFragmentForResult(ShortcutFragment(view.tag.toString()), requestCodeShortcut)
+        return true
+    }
+
     @Suppress(names = ["UNUSED_PARAMETER"])
-    private fun onOutputLongClickMenuItem(qmuiBottomSheet: QMUIBottomSheet, itemView: View, position: Int, tag: String) {
+    private fun onClickListenerMenuItemOutput(qmuiBottomSheet: QMUIBottomSheet, itemView: View, position: Int, tag: String) {
         qmuiBottomSheet.dismiss()
         val context: Context = itemView.context
         when (tag) {
@@ -330,8 +405,33 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             edtMessage.setOnEditorActionListener(null)
         }
 
+        if (Application.Instance.sharedPreferences.isShortcut) {
+            llSendLayout.visibility = View.GONE
+            svShortcutLayout.visibility = View.VISIBLE
+        } else {
+            llSendLayout.visibility = View.VISIBLE
+            svShortcutLayout.visibility = View.GONE
+        }
+
         mCharset = Charset.forName(Application.Instance.sharedPreferences.charset)
         cbHex.isChecked = Application.Instance.sharedPreferences.isHex
+
+        val gson = Gson()
+        val emptyJson = "{}"
+        (1..5).forEach { i: Int ->
+            val keyName: String = Constant.PREFERENCES_KEY_SHORTCUT + String.format(Locale.getDefault(), format = "_%02d", i)
+            val save: String = Application.Instance.sharedPreferences.raw.getString(keyName, emptyJson) ?: emptyJson
+            val shortcutBean: ShortcutBean = gson.fromJson(save, ShortcutBean::class.java)
+            if (shortcutBean.isEmpty().not()) {
+                when (i) {
+                    1 -> btnShortcut01.text = shortcutBean.name
+                    2 -> btnShortcut02.text = shortcutBean.name
+                    3 -> btnShortcut03.text = shortcutBean.name
+                    4 -> btnShortcut04.text = shortcutBean.name
+                    5 -> btnShortcut05.text = shortcutBean.name
+                }
+            }
+        }
     }
 
     override fun onEditorAction(v: TextView?, actionId: Int, event: KeyEvent?): Boolean {
