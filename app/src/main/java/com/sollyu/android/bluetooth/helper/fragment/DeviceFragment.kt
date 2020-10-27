@@ -14,16 +14,18 @@ import android.widget.LinearLayout
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import cn.maizz.kotlin.extension.android.widget.postDelayed
 import com.qmuiteam.qmui.widget.grouplist.QMUICommonListItemView
 import com.sollyu.android.bluetooth.helper.R
+import com.sollyu.android.bluetooth.helper.bean.Constant
 import kotlinx.android.synthetic.main.fragment_device.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 class DeviceFragment : BaseFragment() {
 
     private val searchDevicesBroadcastReceiver: SearchDevicesBroadcastReceiver = SearchDevicesBroadcastReceiver()
-    private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
     private val recyclerViewAdapter: RecyclerViewAdapter = RecyclerViewAdapter()
     private val bluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
 
@@ -49,7 +51,8 @@ class DeviceFragment : BaseFragment() {
         intentFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED)       //动作状态发生了变化
         context.registerReceiver(searchDevicesBroadcastReceiver, intentFilter)
 
-        bluetoothAdapter?.startDiscovery()
+        // 为了避免UI卡顿
+        rootView.postDelayed(200, TimeUnit.MILLISECONDS) { bluetoothAdapter?.startDiscovery() }
     }
 
     override fun onDestroy() {
@@ -80,11 +83,10 @@ class DeviceFragment : BaseFragment() {
 
     private inner class RecyclerViewAdapter : RecyclerView.Adapter<RecyclerViewHolder>(), View.OnClickListener {
         val deviceList: ArrayList<BluetoothDevice> = ArrayList()
-        private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerViewHolder {
             val context: Context = parent.context
-            val itemView: QMUICommonListItemView = QMUICommonListItemView(context)
+            val itemView = QMUICommonListItemView(context)
             val height: Int = context.resources.getDimension(com.qmuiteam.qmui.R.dimen.qmui_list_item_height).toInt()
             itemView.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, height)
             return RecyclerViewHolder(itemView)
@@ -102,10 +104,9 @@ class DeviceFragment : BaseFragment() {
         override fun getItemCount(): Int = deviceList.size
 
         override fun onClick(v: View) {
-            logger.info("LOG:RecyclerViewAdapter:onClick:v={} ", v)
             val bluetoothDevice: BluetoothDevice = v.tag as BluetoothDevice
             val intent = Intent()
-            intent.putExtra("s", bluetoothDevice)
+            intent.putExtra(Constant.INTENT_PARAM_1, bluetoothDevice)
             this@DeviceFragment.popBackStackResult(Activity.RESULT_OK, intent)
         }
     }

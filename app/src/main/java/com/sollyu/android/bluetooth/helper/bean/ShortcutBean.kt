@@ -11,6 +11,6 @@ data class ShortcutBean(
     @SerializedName(value = "text")
     val text: String?
 ) {
-    fun isBlank(): Boolean = name?.isBlank() == true && text?.isBlank() == true
-    fun isEmpty(): Boolean = name?.isEmpty() == true && text?.isEmpty() == true
+    fun isBlank(): Boolean = name.isNullOrBlank() && text.isNullOrBlank()
+    fun isEmpty(): Boolean = name.isNullOrEmpty() && text.isNullOrEmpty()
 }

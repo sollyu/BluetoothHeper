@@ -79,9 +79,11 @@ class BluetoothService : BaseService() {
         mBluetoothSocket = null
     }
 
-    fun isConnect(): Boolean = mBluetoothSocket?.isConnected ?: false
+    fun isConnect(): Boolean = mBluetoothSocket?.inputStream != null && mBluetoothSocket?.outputStream != null
 
     fun write(byteArray: ByteArray) {
+        if (mBluetoothSocket?.outputStream == null)
+            return
         mBluetoothSocket?.outputStream?.write(byteArray)
         liveData.postValue(Action(action = ActionType.WRITE, param1 = byteArray))
     }
@@ -115,22 +117,18 @@ class BluetoothService : BaseService() {
 
         override fun onStart() {
             super.onStart()
-            logger.info("LOG:ServerConnectObserver:onStart")
             liveData.postValue(Action(action = ActionType.WAITING))
         }
 
         override fun onNext(t: BluetoothSocket?) {
-            logger.info("LOG:ServerConnectObserver:onNext t={}", t)
             this@BluetoothService.mBluetoothSocket = t
         }
 
         override fun onError(e: Throwable) {
-            logger.error("LOG:ServerConnectObserver:onError", e)
             liveData.postValue(Action(action = ActionType.DISCONNECT))
         }
 
         override fun onComplete() {
-            logger.info("LOG:ServerConnectObserver:onComplete")
             liveData.postValue(Action(action = ActionType.CONNECTED))
             liveData.postValue(Action(action = ActionType.CONNECTED))
             mReaderObserver?.dispose()
@@ -166,21 +164,17 @@ class BluetoothService : BaseService() {
         override fun onStart() {
             super.onStart()
             liveData.postValue(Action(action = ActionType.CONNECTING))
-            logger.info("LOG:ClientConnectObserver:onStart")
         }
 
         override fun onNext(t: BluetoothSocket) {
             this@BluetoothService.mBluetoothSocket = t
-            logger.info("LOG:ClientConnectObserver:onNext t={}", t)
         }
 
         override fun onError(e: Throwable) {
-            logger.error("LOG:ClientConnectObserver:onError", e)
             liveData.postValue(Action(action = ActionType.DISCONNECT))
         }
 
         override fun onComplete() {
-            logger.info("LOG:ClientConnectObserver:onComplete")
             liveData.postValue(Action(action = ActionType.CONNECTED))
             mReaderObserver?.dispose()
             mReaderObserver = ReaderObserver()

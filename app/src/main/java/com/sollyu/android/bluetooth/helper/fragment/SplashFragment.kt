@@ -1,7 +1,11 @@
 package com.sollyu.android.bluetooth.helper.fragment
 
+import android.content.Context
+import android.content.Intent
+import android.location.LocationManager
 import android.view.LayoutInflater
 import android.view.View
+import androidx.core.location.LocationManagerCompat
 import com.sollyu.android.bluetooth.helper.R
 import io.reactivex.Observable
 import io.reactivex.observers.DisposableObserver
@@ -31,7 +35,12 @@ class SplashFragment : BaseFragment() {
 
         override fun onComplete() {
             logger.info("LOG:T:onComplete")
-            this@SplashFragment.startFragmentAndDestroyCurrent(MainFragment())
+
+            val lm:LocationManager = this@SplashFragment.requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            if (!LocationManagerCompat.isLocationEnabled(lm))
+                this@SplashFragment.requireContext().startActivity(Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+            else
+                this@SplashFragment.startFragmentAndDestroyCurrent(MainFragment())
         }
     }
 }

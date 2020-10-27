@@ -98,14 +98,14 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
     override fun onDestroy() {
         super.onDestroy()
         requireActivity().unbindService(this)
+        mBluetoothServiceBinder?.getService()?.getLiveDate()?.removeObservers(this)
     }
 
     override fun onFragmentResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onFragmentResult(requestCode, resultCode, data)
         if (requestCode == requestCodeDevice && resultCode == Activity.RESULT_OK) {
-            val bluetoothDevice: BluetoothDevice = data?.getParcelableExtra("s") ?: return
+            val bluetoothDevice: BluetoothDevice = data?.getParcelableExtra(Constant.INTENT_PARAM_1) ?: return
             mBluetoothServiceBinder?.getService()?.connectAsClient(bluetoothDevice)
-            logger.info("LOG:MainFragment:onFragmentResult:bluetoothDevice={} ", bluetoothDevice.address)
         }
 
         if (requestCode == requestCodeSetting && resultCode == Activity.RESULT_OK) {
@@ -118,21 +118,19 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
     }
 
     private fun onClickListenerSend(view: View) {
-        if (btnSend.isEnabled.not())
+        if (mBluetoothServiceBinder?.getService()?.isConnect() != true)
             return
 
-        val inputString: String = edtMessage.text?.toString() ?: return
-        var writeDate: ByteArray = ByteArray(0)
+        val inputMessage: String = edtMessage.text?.toString() ?: return
+        var writeDate: ByteArray = inputMessage.toByteArray()
 
         // 以十六进制发送
         if (Application.Instance.sharedPreferences.isHex) {
             try {
-                writeDate = BaseEncoding.base16().decode(inputString)
+                writeDate = BaseEncoding.base16().decode(inputMessage.replace(oldValue = " ", newValue = ""))
             } catch (e: Exception) {
                 Snackbar.make(view, R.string.fragment_main_snackbar_hex_convert_normal_fail, Snackbar.LENGTH_SHORT).show()
             }
-        } else {
-            writeDate = inputString.toByteArray()
         }
 
         // 尾部插入跟随
@@ -146,11 +144,8 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
         }
 
         // 判空
-        if (writeDate.isEmpty()) {
+        if (writeDate.isEmpty())
             return
-        }
-
-        logger.info("LOG:MainFragment:onClickBtnSend writeDate={}", writeDate)
 
         mBluetoothServiceBinder?.getService()?.write(writeDate)
         if (Application.Instance.sharedPreferences.isSendClean)
@@ -162,7 +157,6 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
         val sheetBuilder: QMUIBottomSheet.BottomListSheetBuilder = QMUIBottomSheet.BottomListSheetBuilder(context)
             .setSkinManager(Application.Instance.qmuiSkinManager)
             .setTitle(context.getString(R.string.fragment_main_menu_title))
-            .setAddCancelBtn(true)
             .setAllowDrag(true)
             .setGravityCenter(true)
             .addItem(context.getString(R.string.fragment_main_menu_device_list), "device_list")
@@ -185,26 +179,29 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
     private fun onClickListenerShortcut(view: View) {
         val gson: Gson = Gson()
         val name: String = view.tag.toString()
-        val save: String = Application.Instance.sharedPreferences.raw.getString(Constant.PREFERENCES_KEY_SHORTCUT + "_" + name, "{}") ?: "{}"
+        val save: String = Application.Instance.sharedPreferences.raw.getString(Constant.PREFERENCES_KEY_SHORTCUT + "_" + name, Constant.EMPTY_JSON_STRING) ?: Constant.EMPTY_JSON_STRING
         val shortcutBean: ShortcutBean = gson.fromJson(save, ShortcutBean::class.java)
-        logger.info("LOG:MainFragment:onClickListenerShortcut name={} shortcutBean={}", name, shortcutBean)
-        var writeDate: ByteArray = ByteArray(0)
+        var writeDate: ByteArray = shortcutBean.text.toString().toByteArray()
+
+        if (shortcutBean.isEmpty()) {
+            startFragment(ShortcutFragment(name))
+            return
+        }
 
         // 以十六进制发送
         if (shortcutBean.hex == true) {
             try {
-                writeDate = BaseEncoding.base16().decode(shortcutBean.text.toString())
+                val inputString: String = shortcutBean.text ?: return
+                writeDate = BaseEncoding.base16().decode(inputString.replace(oldValue = " ", newValue = ""))
             } catch (e: Exception) {
                 Snackbar.make(view, R.string.fragment_main_snackbar_hex_convert_normal_fail, Snackbar.LENGTH_SHORT).show()
+                return
             }
-        } else {
-            writeDate = shortcutBean.text.toString().toByteArray()
         }
 
         // 判空
-        if (writeDate.isEmpty()) {
+        if (writeDate.isEmpty())
             return
-        }
 
         mBluetoothServiceBinder?.getService()?.write(writeDate)
     }
@@ -329,7 +326,6 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
     }
 
     override fun onServiceDisconnected(name: ComponentName) {
-        logger.info("LOG:MainFragment:onServiceDisconnected name={}", name)
         this.mBluetoothServiceBinder = null
     }
 
@@ -342,27 +338,23 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
         when (t.action) {
             BluetoothService.ActionType.CONNECTING -> {
                 tvStatus.setText(R.string.fragment_main_bluetooth_status_connecting)
-                btnSend.isEnabled = false
             }
             BluetoothService.ActionType.CONNECTED -> {
                 tvStatus.setText(R.string.fragment_main_bluetooth_status_connected)
-                btnSend.isEnabled = true
             }
             BluetoothService.ActionType.DISCONNECT -> {
                 tvStatus.setText(R.string.fragment_main_bluetooth_status_disconnect)
                 mBluetoothServiceBinder?.getService()?.startWaitConnect()
-                btnSend.isEnabled = false
             }
             BluetoothService.ActionType.WAITING -> {
                 tvStatus.setText(R.string.fragment_main_bluetooth_status_waiting)
-                btnSend.isEnabled = false
             }
             BluetoothService.ActionType.READ -> {
                 val rawByteArray: ByteArray = t.param1 as ByteArray
                 val displayString: String = if (Application.Instance.sharedPreferences.isHex)
                     BaseEncoding.base16().encode(rawByteArray).chunked(size = 2).joinToString(separator = " ")
                 else
-                    String(rawByteArray)
+                    String(rawByteArray, mCharset)
 
                 val history: String = tvReceive.text.toString()
                 tvReceive.text = String.format("%s%s", history, displayString)
@@ -393,6 +385,7 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
     }
 
     private fun onReloadSetting() {
+        // 回车发送
         if (Application.Instance.sharedPreferences.isSingleLine) {
             edtMessage.isSingleLine = true
             edtMessage.maxLines = 1
@@ -405,6 +398,7 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             edtMessage.setOnEditorActionListener(null)
         }
 
+        // 快捷键模式
         if (Application.Instance.sharedPreferences.isShortcut) {
             llSendLayout.visibility = View.GONE
             svShortcutLayout.visibility = View.VISIBLE
