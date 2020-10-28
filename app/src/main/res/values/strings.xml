@@ -1,11 +1,14 @@
 <resources>
     <string name="app_name">BluetoothHelper</string>
-    <string name="fragment_main_message_hit_ascii">ASCII</string>
-    <string name="fragment_main_message_hit_hex">HEX</string>
-    <string name="fragment_main_message_menu_title">Title</string>
-    <string name="fragment_main_message_menu_clean">Clean</string>
-    <string name="fragment_main_message_menu_copy">Copy</string>
-    <string name="fragment_main_message_menu_save">Save</string>
+    <string name="fragment_main_ui_message_hit_ascii">ASCII</string>
+    <string name="fragment_main_ui_message_hit_hex">HEX</string>
+    <string name="fragment_main_ui_message_menu_title">Title</string>
+    <string name="fragment_main_ui_message_menu_clean">Clean</string>
+    <string name="fragment_main_ui_message_menu_copy">Copy</string>
+    <string name="fragment_main_ui_message_menu__save">Save</string>
+    <string name="fragment_main_ui_output_hint">Receiving area</string>
+    <string name="fragment_main_ui_button_send">Send</string>
+    <string name="fragment_main_ui_check_hex">@string/fragment_main_ui_message_hit_hex</string>
     <string name="fragment_main_log_header_app">AppName: %1$s\n</string>
     <string name="fragment_main_log_header_version">AppVersion: %1$s\n</string>
     <string name="fragment_main_log_header_device">DeviceName: %1$s\n</string>

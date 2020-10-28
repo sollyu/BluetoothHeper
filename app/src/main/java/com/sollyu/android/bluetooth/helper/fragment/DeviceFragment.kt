@@ -17,10 +17,9 @@ import androidx.recyclerview.widget.RecyclerView
 import cn.maizz.kotlin.extension.android.widget.postDelayed
 import com.qmuiteam.qmui.widget.grouplist.QMUICommonListItemView
 import com.sollyu.android.bluetooth.helper.R
+import com.sollyu.android.bluetooth.helper.app.Application
 import com.sollyu.android.bluetooth.helper.bean.Constant
 import kotlinx.android.synthetic.main.fragment_device.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
 class DeviceFragment : BaseFragment() {
@@ -71,7 +70,10 @@ class DeviceFragment : BaseFragment() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action.toString() == BluetoothDevice.ACTION_FOUND) {
                 val device: BluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) ?: return
-                if (device.name?.isNotBlank() == true && recyclerViewAdapter.deviceList.any { it.address == device.address }.not()) {
+                if (Application.Instance.yamlSettingBean.hideNoNameDevice && device.name.isNullOrEmpty())
+                    return
+
+                if (recyclerViewAdapter.deviceList.any { it.address == device.address }.not()) {
                     recyclerViewAdapter.deviceList.add(device)
                     recyclerViewAdapter.notifyDataSetChanged()
                 }

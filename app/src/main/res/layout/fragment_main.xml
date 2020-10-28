@@ -25,7 +25,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="6"
                 android:gravity="center"
-                android:text="蓝牙未连接" />
+                android:text="@string/fragment_main_bluetooth_status_disconnect" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvReceiveCount"
@@ -34,7 +34,7 @@
                 android:layout_weight="3"
                 android:background="@color/fragment_main_statistics_receive_default"
                 android:gravity="center"
-                android:text="RX 0"
+                android:text="@string/fragment_main_statistics_receive"
                 android:textColor="@android:color/white" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -44,7 +44,7 @@
                 android:layout_weight="3"
                 android:background="@color/fragment_main_statistics_write_default"
                 android:gravity="center"
-                android:text="TX 0"
+                android:text="@string/fragment_main_statistics_write"
                 android:textColor="@android:color/white" />
         </com.qmuiteam.qmui.layout.QMUILinearLayout>
 
@@ -59,7 +59,7 @@
                 android:id="@+id/tvReceive"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="接收区" />
+                android:hint="@string/fragment_main_ui_output_hint" />
 
         </ScrollView>
 
@@ -79,20 +79,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="false"
-                    android:text="HEX" />
+                    android:text="@string/fragment_main_ui_check_hex" />
 
                 <androidx.appcompat.widget.AppCompatEditText
                     android:id="@+id/edtMessage"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:hint="@string/fragment_main_message_hit_ascii" />
+                    android:hint="@string/fragment_main_ui_message_hit_ascii" />
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btnSend"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="发送" />
+                    android:text="@string/fragment_main_ui_button_send" />
 
             </com.qmuiteam.qmui.layout.QMUILinearLayout>
 
@@ -104,44 +104,10 @@
                 tools:visibility="visible">
 
                 <com.qmuiteam.qmui.layout.QMUILinearLayout
+                    android:id="@+id/llShortcut"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
-
-                    <com.qmuiteam.qmui.layout.QMUIButton
-                        android:id="@+id/btnShortcut01"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:tag="01"
-                        android:text="功能1" />
-
-                    <com.qmuiteam.qmui.layout.QMUIButton
-                        android:id="@+id/btnShortcut02"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:tag="02"
-                        android:text="功能2" />
-
-                    <com.qmuiteam.qmui.layout.QMUIButton
-                        android:id="@+id/btnShortcut03"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:tag="03"
-                        android:text="功能3" />
-
-                    <com.qmuiteam.qmui.layout.QMUIButton
-                        android:id="@+id/btnShortcut04"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:tag="04"
-                        android:text="功能4" />
-
-                    <com.qmuiteam.qmui.layout.QMUIButton
-                        android:id="@+id/btnShortcut05"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:tag="05"
-                        android:text="功能5" />
 
                 </com.qmuiteam.qmui.layout.QMUILinearLayout>
             </HorizontalScrollView>
