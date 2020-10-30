@@ -11,16 +11,33 @@ android {
         applicationId "com.sollyu.android.bluetooth.helper"
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 2
-        versionName "1.0.1-alpha"
+        versionCode 1
+        versionName "1.0.0"
         multiDexEnabled true
         setProperty('archivesBaseName', "$applicationId-official-$versionName-$versionCode-" + (new Date()).format('yyyyMMdd'))
     }
 
+    flavorDimensions 'channel'
+
+    productFlavors {
+        github { dimension 'channel' }
+        play { dimension 'channel' }
+    }
+
     buildTypes {
-        release {
+        debug {
+            debuggable true
             minifyEnabled true
+            shrinkResources true
+            zipAlignEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        release {
+            debuggable false
+            minifyEnabled true
+            shrinkResources true
+            zipAlignEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro', 'proguard-log.pro'
         }
     }
 

@@ -31,9 +31,13 @@
     <string name="fragment_main_snackbar_hex_convert_normal_fail">解析HEX错误</string>
     <string name="fragment_main_snackbar_save_log_success">已存: %1$s</string>
 
+    <string name="fragment_device_title">@string/fragment_main_menu_device_list</string>
     <string name="fragment_settings_title">@string/fragment_main_menu_settings</string>
     <string name="fragment_about_title">@string/fragment_main_menu_about</string>
-    <string name="fragment_device_title">@string/fragment_main_menu_device_list</string>
-    <string name="fragment_shortcut_title">快捷键</string>
+    <string name="fragment_about_group_author_title">作者</string>
+    <string name="fragment_about_group_version_title">版本</string>
+    <string name="fragment_about_group_issue_title">问题</string>
+    <string name="fragment_about_group_issue_value">使用有问题？</string>
+    <string name="fragment_about_group_license_title">LICENSE</string>
 
 </resources>

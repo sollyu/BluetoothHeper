@@ -35,7 +35,7 @@ class DeviceFragment : BaseFragment() {
         super.onViewCreated(rootView)
         qmuiTopBarLayout.setTitle(R.string.fragment_device_title)
         qmuiTopBarLayout.addLeftBackImageButton().setOnClickListener { this.popBackStackResult(resultCode = Activity.RESULT_CANCELED, data = null) }
-        qmuiTopBarLayout.addRightImageButton(R.drawable.ic_expand, R.id.menu_more).setOnClickListener(this::onClickRefresh)
+        qmuiTopBarLayout.addRightImageButton(R.drawable.ic_refresh, R.id.menu_more).setOnClickListener(this::onClickRefresh)
 
         val context: Context = rootView.context
 

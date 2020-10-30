@@ -27,9 +27,10 @@ class AboutFragment : BaseFragment() {
         val context: Context = requireContext()
         val listItemHeight: Int = com.qmuiteam.qmui.util.QMUIResHelper.getAttrDimen(context, com.qmuiteam.qmui.R.attr.qmui_list_item_height)
         val imageDrawable: Drawable? = null
-        val aboutListItem: QMUICommonListItemView = qmuiGroupListView.createItemView(imageDrawable, "作者", "Sollyu", QMUICommonListItemView.HORIZONTAL, QMUICommonListItemView.ACCESSORY_TYPE_NONE, listItemHeight)
-        val versionListItem: QMUICommonListItemView = qmuiGroupListView.createItemView(imageDrawable, "版本", BuildConfig.VERSION_NAME, QMUICommonListItemView.HORIZONTAL, QMUICommonListItemView.ACCESSORY_TYPE_NONE, listItemHeight)
-        val licenseListItem: QMUICommonListItemView = qmuiGroupListView.createItemView(imageDrawable, "LICENSE", Constant.EMPTY_STRING, QMUICommonListItemView.HORIZONTAL, QMUICommonListItemView.ACCESSORY_TYPE_NONE, listItemHeight)
+        val aboutListItem: QMUICommonListItemView = qmuiGroupListView.createItemView(imageDrawable, context.getString(R.string.fragment_about_group_author_title), "Sollyu", QMUICommonListItemView.HORIZONTAL, QMUICommonListItemView.ACCESSORY_TYPE_NONE, listItemHeight)
+        val versionListItem: QMUICommonListItemView = qmuiGroupListView.createItemView(imageDrawable, context.getString(R.string.fragment_about_group_version_title), BuildConfig.VERSION_NAME, QMUICommonListItemView.HORIZONTAL, QMUICommonListItemView.ACCESSORY_TYPE_NONE, listItemHeight)
+        val issueListItem: QMUICommonListItemView = qmuiGroupListView.createItemView(imageDrawable, context.getString(R.string.fragment_about_group_issue_title), "使用有问题", QMUICommonListItemView.HORIZONTAL, QMUICommonListItemView.ACCESSORY_TYPE_NONE, listItemHeight)
+        val licenseListItem: QMUICommonListItemView = qmuiGroupListView.createItemView(imageDrawable, context.getString(R.string.fragment_about_group_license_title), Constant.EMPTY_STRING, QMUICommonListItemView.HORIZONTAL, QMUICommonListItemView.ACCESSORY_TYPE_NONE, listItemHeight)
 
         if (Application.Instance.apiGithubReleasesBean != null && Application.Instance.apiGithubReleasesBean?.tagName != BuildConfig.VERSION_NAME) {
             versionListItem.setTipPosition(QMUICommonListItemView.TIP_POSITION_LEFT)
@@ -40,6 +41,7 @@ class AboutFragment : BaseFragment() {
             .setTitle(Constant.EMPTY_STRING)
             .addItemView(aboutListItem, null)
             .addItemView(versionListItem, this::onClickListenerVersion)
+            .addItemView(issueListItem, this::onClickListenerVersionIssue)
             .addTo(qmuiGroupListView)
 
         QMUIGroupListView.Section(context)
@@ -58,6 +60,10 @@ class AboutFragment : BaseFragment() {
 
     private fun onClickListenerVersionLicense(view: View) {
         LicensesDialog.Builder(view.context).setNotices(R.raw.licenses).build().show()
+    }
+
+    private fun onClickListenerVersionIssue(view: View) {
+        view.context.gotoUrl("https://github.com/sollyu/BluetoothHeper/issues")
     }
 
 }

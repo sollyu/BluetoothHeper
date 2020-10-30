@@ -12,6 +12,7 @@ data class YamlSettingBean(
     val serverUuid: String = Constant.EMPTY_STRING,
     val shortcut: List<Shortcut> = ArrayList()
 ) {
+    @Keep
     data class Shortcut(
         val name: String = Constant.EMPTY_STRING,
         val hex: Boolean = false,

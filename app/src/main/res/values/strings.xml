@@ -31,9 +31,15 @@
     <string name="fragment_main_snackbar_hex_convert_normal_fail">Parser Hex Fail</string>
     <string name="fragment_main_snackbar_save_log_success">Saved: %1$s</string>
 
-    <string name="fragment_settings_title">Settings</string>
-    <string name="fragment_about_title">About</string>
-    <string name="fragment_device_title">Device</string>
-    <string name="fragment_shortcut_title">Shortcut</string>
+    <string name="fragment_device_title">@string/fragment_main_menu_device_list</string>
+    <string name="fragment_settings_title">@string/fragment_main_menu_settings</string>
+    <string name="fragment_about_title">@string/fragment_main_menu_about</string>
+    <string name="fragment_about_group_author_title">Author</string>
+    <string name="fragment_about_group_version_title">Version</string>
+    <string name="fragment_about_group_issue_title">Issue</string>
+    <string name="fragment_about_group_issue_value">commit an issue</string>
+    <string name="fragment_about_group_license_title">LICENSE</string>
+
+
 
 </resources>
