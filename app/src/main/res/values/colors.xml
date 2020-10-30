@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#6200EE</color>
+    <color name="colorPrimaryDark">#3700B3</color>
+    <color name="colorAccent">#03DAC5</color>
+
+    <color name="fragment_main_statistics_receive_default">#000070</color>
+    <color name="fragment_main_statistics_receive_highlight">#5E5EFF</color>
+    <color name="fragment_main_statistics_write_default">#A52A2A</color>
+    <color name="fragment_main_statistics_write_highlight">#FF6E6E</color>
+
+</resources>

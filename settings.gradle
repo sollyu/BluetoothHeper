@@ -1,0 +1,2 @@
+include ':app', ':kotlin-extension-android-model'
+rootProject.name = "BluetoothHelper"

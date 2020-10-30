@@ -1,0 +1,44 @@
+# Yaml
+# 修改此文件的时候，注意空格的数量
+# 如果您不熟悉，请在原配置上进行修改
+#
+# 本文件在路径下
+# 使用外部工具修改重启软件生效
+# /sdcard/Android/data/com.sollyu.android.bluetooth.helper/files/settings.yaml
+#
+
+# 回车键发送
+# 「true」为「是」的意思
+# 「false」为「不是」的意思
+enterKeySend: true
+
+# 发送时追加内容，十六进制 0A=\n
+onSendAppend: '0A'
+
+# 发送时清空输入框
+onSendClean: true
+
+# 扫描时隐藏空名称的设备
+hideNoNameDevice: true
+
+# 字符串字符集
+stringCharset: 'UTF-8'
+
+# 用于蓝牙通信的UUID
+# 如无特殊需求，请不要改变
+serverUuid: '00001101-0000-1000-8000-00805F9B34FB'
+
+# 快捷键 模式中的按钮
+# 其中一个「-」表示一组
+# 理论上可以增加无限多的按钮
+shortcut:
+    -   name: 'Hello'
+        hex: true
+        text: '48 65 6C 6C 6F'
+    -   name: '你好'
+        hex: false
+        text: '你好，蓝牙'
+
+
+
+

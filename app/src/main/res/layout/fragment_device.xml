@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/qmui_config_color_background"
+    android:fitsSystemWindows="true">
+
+    <com.qmuiteam.qmui.layout.QMUIConstraintLayout
+        android:id="@+id/qmuiConstraintLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/qmui_topbar_height"
+        android:visibility="visible">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/qmui_group_list_section_header_footer_padding_vertical" />
+
+    </com.qmuiteam.qmui.layout.QMUIConstraintLayout>
+
+    <com.qmuiteam.qmui.widget.QMUITopBarLayout
+        android:id="@+id/qmuiTopBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        tools:layout_height="?attr/qmui_topbar_height" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
