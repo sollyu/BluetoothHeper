@@ -11,8 +11,8 @@ android {
         applicationId "com.sollyu.android.bluetooth.helper"
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0.0-alpha"
+        versionCode 2
+        versionName "1.0.1-alpha"
         multiDexEnabled true
         setProperty('archivesBaseName', "$applicationId-official-$versionName-$versionCode-" + (new Date()).format('yyyyMMdd'))
     }
@@ -44,11 +44,11 @@ dependencies {
     kapt 'com.qmuiteam:arch-compiler:2.0.0-alpha10'
 
     implementation 'org.slf4j:slf4j-android:1.7.30'
-    implementation 'org.greenrobot:eventbus:3.2.0'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.google.guava:guava:30.0-android'
     implementation 'org.yaml:snakeyaml:1.27:android'
     implementation 'com.github.ahmadaghazadeh:CodeEditor:1.0.17'
+    implementation 'de.psdev.licensesdialog:licensesdialog:2.1.0'
 
     implementation 'io.reactivex.rxjava3:rxkotlin:3.0.0'
     implementation 'com.trello.rxlifecycle4:rxlifecycle-kotlin:4.0.0'
@@ -64,7 +64,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.8.1'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.8.1'
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.9.0'
+    implementation 'com.squareup.retrofit2:adapter-rxjava3:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 
 }

@@ -15,6 +15,7 @@ import android.widget.CompoundButton
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import cn.maizz.kotlin.extension.android.content.setClipboardString
 import cn.maizz.kotlin.extension.android.widget.postDelayed
@@ -23,13 +24,19 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.common.io.BaseEncoding
 import com.qmuiteam.qmui.layout.QMUIButton
 import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet
+import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheetListItemModel
 import com.sollyu.android.bluetooth.helper.BuildConfig
 import com.sollyu.android.bluetooth.helper.R
 import com.sollyu.android.bluetooth.helper.app.Application
+import com.sollyu.android.bluetooth.helper.bean.ApiGithubReleasesBean
 import com.sollyu.android.bluetooth.helper.bean.Constant
 import com.sollyu.android.bluetooth.helper.bean.YamlSettingBean
 import com.sollyu.android.bluetooth.helper.network.Network
 import com.sollyu.android.bluetooth.helper.service.BluetoothService
+import com.trello.rxlifecycle4.android.lifecycle.kotlin.bindUntilEvent
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.observers.DisposableObserver
+import io.reactivex.rxjava3.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_main.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -88,6 +95,12 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             this.onReloadSetting()
         }
 
+        Network.Instance.github.releaseLatest(Constant.GITHUB_OWNER, Constant.GITHUB_REPO)
+            .bindUntilEvent(this, Lifecycle.Event.ON_DESTROY)
+            .subscribeOn(Schedulers.io())
+            .delay(1, TimeUnit.SECONDS)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(NetworkGithubReleaseLatest())
     }
 
     override fun onDestroy() {
@@ -155,7 +168,11 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             .setGravityCenter(true)
             .addItem(context.getString(R.string.fragment_main_menu_device_list), "device_list")
             .addItem(context.getString(R.string.fragment_main_menu_settings), "settings")
-            .addItem(context.getString(R.string.fragment_main_menu_about), "about")
+
+        val aboutItem = QMUIBottomSheetListItemModel(context.getString(R.string.fragment_main_menu_about), "about")
+        if (Application.Instance.apiGithubReleasesBean != null && Application.Instance.apiGithubReleasesBean?.tagName != BuildConfig.VERSION_NAME)
+            aboutItem.redPoint(true)
+        sheetBuilder.addItem(aboutItem)
 
         if (mBluetoothServiceBinder?.getService()?.isConnect() == true)
             sheetBuilder.addItem(context.getString(R.string.fragment_main_menu_disconnect), "disconnect")
@@ -411,4 +428,19 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
         return true
     }
 
+    private inner class NetworkGithubReleaseLatest : DisposableObserver<ApiGithubReleasesBean>() {
+        private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
+        override fun onNext(t: ApiGithubReleasesBean) {
+            logger.info("LOG:NetworkGithubReleaseLatest:onNext t={}", t)
+            Application.Instance.apiGithubReleasesBean = t
+        }
+
+        override fun onError(e: Throwable) {
+            logger.error("LOG:NetworkGithubReleaseLatest:onError", e)
+        }
+
+        override fun onComplete() {
+            logger.info("LOG:NetworkGithubReleaseLatest:onComplete")
+        }
+    }
 }

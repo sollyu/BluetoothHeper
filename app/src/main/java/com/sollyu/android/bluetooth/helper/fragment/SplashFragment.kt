@@ -7,8 +7,8 @@ import android.view.LayoutInflater
 import android.view.View
 import androidx.core.location.LocationManagerCompat
 import com.sollyu.android.bluetooth.helper.R
-import io.reactivex.Observable
-import io.reactivex.observers.DisposableObserver
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.observers.DisposableObserver
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit

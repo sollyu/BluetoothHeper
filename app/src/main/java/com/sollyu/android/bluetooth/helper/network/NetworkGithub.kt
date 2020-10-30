@@ -3,11 +3,12 @@ package com.sollyu.android.bluetooth.helper.network
 import com.sollyu.android.bluetooth.helper.bean.ApiGithubContentsBean
 import com.sollyu.android.bluetooth.helper.bean.ApiGithubReleasesBean
 import com.sollyu.android.bluetooth.helper.bean.ApiGithubTreesBean
-import io.reactivex.Observable
+import io.reactivex.rxjava3.core.Observable
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.Path
 import retrofit2.http.Query
+
 
 /**
  * Github常用API
@@ -23,7 +24,7 @@ interface NetworkGithub {
      * @param repo 仓库名称
      */
     @GET(value = "/repos/{owner}/{repo}/releases/latest")
-    @Headers(value = ["Accept:application/json", "Content-Type:application/json"])
+    @Headers(value = ["Accept:application/json", "Content-Type:application/json", "Cache-Duration:86400"])
     fun releaseLatest(
         @Path(value = "owner") owner: String,
         @Path(value = "repo") repo: String
