@@ -28,6 +28,7 @@ import com.sollyu.android.bluetooth.helper.R
 import com.sollyu.android.bluetooth.helper.app.Application
 import com.sollyu.android.bluetooth.helper.bean.Constant
 import com.sollyu.android.bluetooth.helper.bean.YamlSettingBean
+import com.sollyu.android.bluetooth.helper.network.Network
 import com.sollyu.android.bluetooth.helper.service.BluetoothService
 import kotlinx.android.synthetic.main.fragment_main.*
 import org.slf4j.Logger
@@ -86,6 +87,7 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
             tvWriteCount.text = context.getString(R.string.fragment_main_statistics_write, 0)
             this.onReloadSetting()
         }
+
     }
 
     override fun onDestroy() {
