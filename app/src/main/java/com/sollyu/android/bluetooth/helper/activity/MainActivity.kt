@@ -1,10 +1,13 @@
 package com.sollyu.android.bluetooth.helper.activity
 
 import android.os.Bundle
+import android.util.Log
 import com.qmuiteam.qmui.arch.QMUIFragmentActivity
 import com.qmuiteam.qmui.arch.annotation.DefaultFirstFragment
+import com.sollyu.android.bluetooth.helper.BuildConfig
 import com.sollyu.android.bluetooth.helper.app.Application
 import com.sollyu.android.bluetooth.helper.fragment.SplashFragment
+import java.util.*
 
 @DefaultFirstFragment(SplashFragment::class)
 class MainActivity : QMUIFragmentActivity() {

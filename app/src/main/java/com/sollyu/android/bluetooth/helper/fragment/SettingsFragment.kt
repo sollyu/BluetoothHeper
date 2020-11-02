@@ -67,7 +67,7 @@ class SettingsFragment : BaseFragment() {
 
         override fun getSyntaxKeywords(): Pattern = Pattern.compile(
             "(?<=\\b)((enterKeySend)|(onSendAppend)|(onSendClean)|(stringCharset)|(hideNoNameDevice)|(shortcut)|(serverUuid)|(name)" +
-            "|(hex)|(text)|(while)|(return)|(case)|(catch)|(of)|(typeof)" +
+            "|(hex)|(text)|(serverName)|(return)|(case)|(catch)|(of)|(typeof)" +
             "|(const)|(default)|(do)|(switch)|(try)|(null)|(true)" +
             "|(false)|(eval)|(let))(?=\\b)"
         )
@@ -80,9 +80,7 @@ class SettingsFragment : BaseFragment() {
 
         override fun getLanguageBrackets(): CharArray = charArrayOf()
 
-        override fun getAllCompletions(): Array<String> = arrayOf("enterKeySend", "onSendAppend", "onSendClean", "stringCharset",
-            "hideNoNameDevice",
-            "serverUuid", "shortcut", "name", "hex", "text", "UTF-8", "GB2312", "GBK", "true", "false")
+        override fun getAllCompletions(): Array<String> = arrayOf("enterKeySend", "onSendAppend", "onSendClean", "stringCharset", "hideNoNameDevice", "serverName", "serverUuid", "shortcut", "name", "hex", "text", "UTF-8", "GB2312", "GBK", "true", "false")
 
     }
 

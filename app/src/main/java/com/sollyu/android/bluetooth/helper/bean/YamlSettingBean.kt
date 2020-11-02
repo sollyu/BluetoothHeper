@@ -9,6 +9,7 @@ data class YamlSettingBean(
     val onSendClean: Boolean = true,
     val hideNoNameDevice: Boolean = true,
     val stringCharset: String = "UTF-8",
+    val serverName:String = Constant.EMPTY_STRING,
     val serverUuid: String = Constant.EMPTY_STRING,
     val shortcut: List<Shortcut> = ArrayList()
 ) {
