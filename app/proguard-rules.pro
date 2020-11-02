@@ -19,11 +19,11 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
-#-obfuscationdictionary          proguard-dic-6.txt
-#-renamesourcefileattribute      proguard-dic-6.txt
-#-classobfuscationdictionary     proguard-dic-6.txt
-#-packageobfuscationdictionary   proguard-dic-6.txt
-#-renamesourcefileattribute      this-an-open-source-app
+-obfuscationdictionary          proguard-dic-6.txt
+-renamesourcefileattribute      proguard-dic-6.txt
+-classobfuscationdictionary     proguard-dic-6.txt
+-packageobfuscationdictionary   proguard-dic-6.txt
+-renamesourcefileattribute      this-an-open-source-app
 -repackageclasses               java.io
 
 -dontwarn **

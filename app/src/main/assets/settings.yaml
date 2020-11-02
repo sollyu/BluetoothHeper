@@ -24,8 +24,10 @@ hideNoNameDevice: true
 # 字符串字符集
 stringCharset: 'UTF-8'
 
-# 用于蓝牙通信的UUID
-# 如无特殊需求，请不要改变
+# 用于蓝牙通信名称和UUID
+# 如无特殊需求，请不要改变此选项
+# 改变后需要完全重启软件生效
+serverName: 'BluetoothHelper'
 serverUuid: '00001101-0000-1000-8000-00805F9B34FB'
 
 # 快捷键 模式中的按钮

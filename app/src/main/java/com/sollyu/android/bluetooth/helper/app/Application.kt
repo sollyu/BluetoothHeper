@@ -5,6 +5,7 @@ import android.content.Intent
 import cn.maizz.kotlin.extension.java.io.copy
 import com.qmuiteam.qmui.arch.QMUISwipeBackActivityManager
 import com.qmuiteam.qmui.skin.QMUISkinManager
+import com.sollyu.android.bluetooth.helper.bean.ApiGithubReleasesBean
 import com.sollyu.android.bluetooth.helper.bean.Constant
 import com.sollyu.android.bluetooth.helper.bean.YamlSettingBean
 import com.sollyu.android.bluetooth.helper.service.BluetoothService
@@ -28,6 +29,7 @@ class Application : Application(), Thread.UncaughtExceptionHandler {
 
     lateinit var qmuiSkinManager: QMUISkinManager
     lateinit var yamlSettingBean: YamlSettingBean
+    var apiGithubReleasesBean: ApiGithubReleasesBean? = null
 
     override fun onCreate() {
         super.onCreate()

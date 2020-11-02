@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.IBinder
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.sollyu.android.bluetooth.helper.app.Application
 import com.trello.rxlifecycle4.android.ActivityEvent
 import com.trello.rxlifecycle4.kotlin.bindUntilEvent
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -23,9 +24,6 @@ class BluetoothService : BaseService() {
     private val binder: Binder = Binder()
     private val liveData: MutableLiveData<Action> = MutableLiveData()
 
-    private val SERVER_NAME = "BluetoothHelper"
-    private val SERVER_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-
     private val mBluetoothAdapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
 
     private var mBluetoothSocket: BluetoothSocket? = null
@@ -38,7 +36,9 @@ class BluetoothService : BaseService() {
 
     enum class ActionType { CONNECTING, CONNECTED, DISCONNECT, READ, WRITE, WAITING }
 
-    data class Action(val action: ActionType, val param1: Any? = null, val param2: Any? = null)
+    data class Action(val action: ActionType, val param1: Any? = null, val param2: Any? = null) {
+        override fun toString(): String = super.toString()
+    }
 
     /**
      * 等待被人连接
@@ -99,7 +99,7 @@ class BluetoothService : BaseService() {
     private inner class ServerConnectObservable : Observable<BluetoothSocket>() {
         override fun subscribeActual(observer: io.reactivex.rxjava3.core.Observer<in BluetoothSocket>) {
             try {
-                val mmServerSocket: BluetoothServerSocket = mBluetoothAdapter?.listenUsingInsecureRfcommWithServiceRecord(SERVER_NAME, SERVER_UUID) ?: throw IllegalStateException()
+                val mmServerSocket: BluetoothServerSocket = mBluetoothAdapter?.listenUsingInsecureRfcommWithServiceRecord(Application.Instance.yamlSettingBean.serverName, UUID.fromString(Application.Instance.yamlSettingBean.serverUuid)) ?: throw IllegalStateException()
                 val bluetoothSocket: BluetoothSocket = mmServerSocket.accept()
                 if (bluetoothSocket.isConnected.not())
                     bluetoothSocket.connect()
@@ -113,8 +113,6 @@ class BluetoothService : BaseService() {
     }
 
     private inner class ServerConnectObserver : DisposableObserver<BluetoothSocket>() {
-        private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
-
         override fun onStart() {
             super.onStart()
             liveData.postValue(Action(action = ActionType.WAITING))
@@ -147,7 +145,7 @@ class BluetoothService : BaseService() {
     private inner class ClientConnectObservable(private val bluetoothDevice: BluetoothDevice) : Observable<BluetoothSocket>() {
         override fun subscribeActual(observer: io.reactivex.rxjava3.core.Observer<in BluetoothSocket>) {
             try {
-                val bluetoothSocket: BluetoothSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(SERVER_UUID)
+                val bluetoothSocket: BluetoothSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString(Application.Instance.yamlSettingBean.serverUuid))
                 bluetoothSocket.connect()
                 observer.onNext(bluetoothSocket)
                 observer.onComplete()
@@ -158,9 +156,6 @@ class BluetoothService : BaseService() {
     }
 
     private inner class ClientConnectObserver : DisposableObserver<BluetoothSocket>() {
-
-        private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
-
         override fun onStart() {
             super.onStart()
             liveData.postValue(Action(action = ActionType.CONNECTING))
