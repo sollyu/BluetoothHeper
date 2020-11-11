@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import com.github.ahmadaghazadeh.editor.processor.language.Language
 import com.google.android.material.snackbar.Snackbar
+import com.microsoft.appcenter.analytics.Analytics
 import com.qmuiteam.qmui.widget.dialog.QMUIDialog
 import com.sollyu.android.bluetooth.helper.R
 import com.sollyu.android.bluetooth.helper.app.Application
@@ -42,6 +43,7 @@ class SettingsFragment : BaseFragment() {
     }
 
     private fun onClickListenerSave(view: View) {
+        Analytics.trackEvent("SettingsFragmentClickSave")
         val context: Context = requireContext()
         try {
             Application.Instance.yamlSettingBean = Yaml().loadAs(appCompatEditText.text, YamlSettingBean::class.java)

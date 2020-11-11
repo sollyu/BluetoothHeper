@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cn.maizz.kotlin.extension.android.widget.postDelayed
+import com.microsoft.appcenter.analytics.Analytics
 import com.qmuiteam.qmui.widget.grouplist.QMUICommonListItemView
 import com.sollyu.android.bluetooth.helper.R
 import com.sollyu.android.bluetooth.helper.app.Application
@@ -61,6 +62,7 @@ class DeviceFragment : BaseFragment() {
 
     @Suppress("UNUSED_PARAMETER")
     private fun onClickRefresh(view: View) {
+        Analytics.trackEvent("DeviceFragmentClickRefresh")
         bluetoothAdapter?.startDiscovery()
         recyclerViewAdapter.deviceList.clear()
         recyclerViewAdapter.notifyDataSetChanged()
@@ -106,6 +108,9 @@ class DeviceFragment : BaseFragment() {
         override fun getItemCount(): Int = deviceList.size
 
         override fun onClick(v: View) {
+            val properties = HashMap<String, String>()
+            properties["DeviceCount"] = deviceList.size.toString()
+            Analytics.trackEvent("DeviceFragmentClickDevice", properties)
             val bluetoothDevice: BluetoothDevice = v.tag as BluetoothDevice
             val intent = Intent()
             intent.putExtra(Constant.INTENT_PARAM_1, bluetoothDevice)
