@@ -12,16 +12,9 @@ android {
         minSdkVersion 19
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0.0"
+        versionName "1.0.0-beta"
         multiDexEnabled true
         setProperty('archivesBaseName', "$applicationId-$versionName-$versionCode-" + (new Date()).format('yyyyMMdd'))
-    }
-
-    flavorDimensions 'channel'
-
-    productFlavors {
-        github { dimension 'channel' }
-        play { dimension 'channel' }
     }
 
     buildTypes {
