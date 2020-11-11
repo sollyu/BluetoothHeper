@@ -3,6 +3,9 @@ package com.sollyu.android.bluetooth.helper.app
 import android.app.Application
 import android.content.Intent
 import cn.maizz.kotlin.extension.java.io.copy
+import com.microsoft.appcenter.AppCenter
+import com.microsoft.appcenter.analytics.Analytics
+import com.microsoft.appcenter.crashes.Crashes
 import com.qmuiteam.qmui.arch.QMUISwipeBackActivityManager
 import com.qmuiteam.qmui.skin.QMUISkinManager
 import com.sollyu.android.bluetooth.helper.bean.ApiGithubReleasesBean
@@ -14,6 +17,7 @@ import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
 import java.io.File
 import kotlin.system.exitProcess
+
 
 class Application : Application(), Thread.UncaughtExceptionHandler {
     companion object {
@@ -34,6 +38,7 @@ class Application : Application(), Thread.UncaughtExceptionHandler {
     override fun onCreate() {
         super.onCreate()
 
+        AppCenter.start(Instance, "7b36cc47-8789-4391-82d0-c3441149f10d", Analytics::class.java, Crashes::class.java)
         Thread.setDefaultUncaughtExceptionHandler(this)
         QMUISwipeBackActivityManager.init(Instance)
         Instance.qmuiSkinManager = QMUISkinManager.defaultInstance(Instance)
@@ -50,7 +55,6 @@ class Application : Application(), Thread.UncaughtExceptionHandler {
             logger.error("LOG:Application:onCreate", e)
             yaml.loadAs(assets.open(Constant.YAML_SETTINGS_FILE_NAME), YamlSettingBean::class.java)
         }
-        logger.info("LOG:Application:onCreate yamlSettingBean={}", yamlSettingBean)
 
         // 启动蓝牙服务
         startService(Intent(Instance, BluetoothService::class.java))

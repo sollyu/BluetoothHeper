@@ -22,6 +22,7 @@ import cn.maizz.kotlin.extension.android.widget.postDelayed
 import cn.maizz.kotlin.extension.java.util.format
 import com.google.android.material.snackbar.Snackbar
 import com.google.common.io.BaseEncoding
+import com.microsoft.appcenter.analytics.Analytics
 import com.qmuiteam.qmui.layout.QMUIButton
 import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheet
 import com.qmuiteam.qmui.widget.dialog.QMUIBottomSheetListItemModel
@@ -44,6 +45,7 @@ import java.io.File
 import java.nio.charset.Charset
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.HashMap
 
 class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothService.Action>, TextView.OnEditorActionListener {
 
@@ -119,8 +121,6 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
         if (requestCode == requestCodeSetting) {
             onReloadSetting()
         }
-
-
     }
 
     private fun onClickListenerSend(view: View) {
@@ -154,6 +154,10 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
         if (writeDate.isEmpty())
             return
 
+        val properties = HashMap<String, String>()
+        properties["Length"] = writeDate.size.toString()
+        properties["IsHex"] = mHexMode.toString()
+        Analytics.trackEvent("MainFragmentClickSend", properties)
         mBluetoothServiceBinder?.getService()?.write(writeDate)
         if (Application.Instance.yamlSettingBean.onSendClean)
             edtMessage.text = null
@@ -182,6 +186,10 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
         else
             sheetBuilder.addItem(context.getString(R.string.fragment_main_menu_shortcut), "mode_shortcut")
 
+        val properties = HashMap<String, String>()
+        properties["IsConnect"] = mBluetoothServiceBinder?.getService()?.isConnect().toString()
+        properties["IsCanUpdate"] = (Application.Instance.apiGithubReleasesBean != null && Application.Instance.apiGithubReleasesBean?.tagName != BuildConfig.VERSION_NAME).toString()
+        Analytics.trackEvent("MainFragmentClickMore", properties)
         sheetBuilder.setOnSheetItemClickListener(this::onClickMenuMoreItem)
             .build()
             .show()
@@ -207,10 +215,17 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
         if (shortcut.isEmpty())
             return
 
+        val properties = HashMap<String, String>()
+        properties["Length"] = writeDate.size.toString()
+        properties["IsHex"] = shortcut.hex.toString()
+        Analytics.trackEvent("MainFragmentClickShortcut", properties)
         mBluetoothServiceBinder?.getService()?.write(writeDate)
     }
 
     private fun onCheckedChangedHex(buttonView: CompoundButton, isChecked: Boolean) {
+        val properties = HashMap<String, String>()
+        properties["IsHex"] = isChecked.toString();
+        Analytics.trackEvent("MainFragmentClickChangedHex", properties)
         mHexMode = isChecked
         edtMessage.setHint(if (isChecked) R.string.fragment_main_ui_message_hit_hex else R.string.fragment_main_ui_message_hit_ascii)
         val inputMessage: String = edtMessage.text.toString()
@@ -232,6 +247,10 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
 
     @Suppress(names = ["UNUSED_PARAMETER"])
     private fun onClickMenuMoreItem(qmuiBottomSheet: QMUIBottomSheet, itemView: View, position: Int, tag: String) {
+        val properties = HashMap<String, String>()
+        properties["Tag"] = tag
+        Analytics.trackEvent("MainFragmentClickMoreItem", properties)
+
         qmuiBottomSheet.dismiss()
         when (tag) {
             "device_list" -> {
@@ -258,6 +277,8 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
     }
 
     private fun onLongClickListenerOutput(view: View): Boolean {
+        Analytics.trackEvent("MainFragmentLongClickOutput")
+
         val context: Context = view.context
         QMUIBottomSheet.BottomListSheetBuilder(context)
             .setSkinManager(Application.Instance.qmuiSkinManager)
@@ -277,6 +298,10 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
 
     @Suppress(names = ["UNUSED_PARAMETER"])
     private fun onClickListenerMenuItemOutput(qmuiBottomSheet: QMUIBottomSheet, itemView: View, position: Int, tag: String) {
+        val properties = HashMap<String, String>()
+        properties["Tag"] = tag
+        Analytics.trackEvent("MainFragmentClickOutputItem", properties)
+
         qmuiBottomSheet.dismiss()
         val context: Context = itemView.context
         when (tag) {
@@ -423,6 +448,7 @@ class MainFragment : BaseFragment(), ServiceConnection, Observer<BluetoothServic
 
     override fun onEditorAction(v: TextView?, actionId: Int, event: KeyEvent?): Boolean {
         if (actionId == EditorInfo.IME_ACTION_SEND) {
+            Analytics.trackEvent("MainFragmentEditorEnter")
             btnSend.performClick()
         }
         return true

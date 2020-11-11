@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import cn.maizz.kotlin.extension.android.content.gotoUrl
+import com.microsoft.appcenter.analytics.Analytics
 import com.qmuiteam.qmui.widget.grouplist.QMUICommonListItemView
 import com.qmuiteam.qmui.widget.grouplist.QMUIGroupListView
 import com.sollyu.android.bluetooth.helper.BuildConfig
@@ -51,6 +52,7 @@ class AboutFragment : BaseFragment() {
     }
 
     private fun onClickListenerVersion(view: View) {
+        Analytics.trackEvent("AboutFragmentClickVersion")
         if (Application.Instance.apiGithubReleasesBean != null && Application.Instance.apiGithubReleasesBean?.tagName != BuildConfig.VERSION_NAME) {
             view.context.gotoUrl("https://github.com/sollyu/BluetoothHeper/releases/tag/" + Application.Instance.apiGithubReleasesBean?.tagName)
         } else {
@@ -59,10 +61,12 @@ class AboutFragment : BaseFragment() {
     }
 
     private fun onClickListenerVersionLicense(view: View) {
+        Analytics.trackEvent("AboutFragmentClickLicense")
         LicensesDialog.Builder(view.context).setNotices(R.raw.licenses).build().show()
     }
 
     private fun onClickListenerVersionIssue(view: View) {
+        Analytics.trackEvent("AboutFragmentClickIssue")
         view.context.gotoUrl("https://github.com/sollyu/BluetoothHeper/issues")
     }
 
